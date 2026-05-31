@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Durham Hotel — Shift Checklists</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#FAFAF8;color:#1A1A1A;font-size:14px;line-height:1.6;min-height:100vh;}
+#header{background:#fff;border-bottom:2px solid #C9A84C;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+#header-inner{display:flex;align-items:center;padding:10px 24px;gap:14px;flex-wrap:wrap;}
+#logo{width:36px;height:36px;background:#C9A84C;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;border-radius:2px;flex-shrink:0;}
+#logo-text{font-size:15px;font-weight:600;color:#141414;line-height:1.2;}
+#logo-text span{display:block;font-size:9px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;color:#6B6B6B;margin-top:2px;}
+#shift-badge{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9A7A2E;background:#F7F0DC;border:1px solid #E8D28A;border-radius:4px;padding:5px 10px;flex-shrink:0;}
+#header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+#dl-btn{background:#C9A84C;color:#fff;border:none;font-family:inherit;font-size:11px;font-weight:600;padding:6px 14px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+#dl-btn:hover{background:#9A7A2E;}
+#tabbar{background:#fff;border-bottom:1px solid #E8E4DA;display:flex;padding:0 24px;}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:#6B6B6B;font-family:inherit;font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;padding:10px 16px;cursor:pointer;white-space:nowrap;margin-bottom:-1px;transition:all .15s;}
+.tab:hover{color:#1A1A1A;}
+.tab.active{color:#9A7A2E;border-bottom-color:#C9A84C;font-weight:600;}
+#body{max-width:780px;margin:0 auto;padding:32px 24px 80px;}
+.panel{display:none;}
+.panel.active{display:block;}
+.agent-banner{background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:18px 22px;margin-bottom:24px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;}
+.ab-field{display:flex;flex-direction:column;gap:5px;}
+.ab-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;}
+.ab-select,.ab-input{border:1px solid #E8E4DA;border-radius:5px;padding:7px 10px;font-family:inherit;font-size:13px;color:#1A1A1A;background:#FAFAF8;outline:none;min-width:160px;}
+.ab-select:focus,.ab-input:focus{border-color:#C9A84C;background:#fff;}
+.ab-field.new-name{display:none;}
+.ab-field.new-name.show{display:flex;}
+.cl-card{background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:20px 22px;margin-bottom:16px;}
+.cl-header{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #F2F2F0;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.cl-title{font-size:20px;font-weight:600;color:#141414;}
+.cl-shift{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;}
+.progress-bar{height:4px;background:#F2F2F0;border-radius:2px;margin-bottom:16px;overflow:hidden;}
+.progress-fill{height:100%;background:#C9A84C;border-radius:2px;transition:width .3s;}
+.progress-label{font-size:11px;color:#6B6B6B;margin-bottom:14px;}
+.ctm{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9A7A2E;background:#F7F0DC;border:1px solid #E8D28A;padding:3px 10px;border-radius:3px;display:inline-block;margin:10px 0 6px;pointer-events:none;user-select:none;}
+.ci{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #F2F2F0;cursor:pointer;border-radius:4px;}
+.ci:last-of-type{border-bottom:none;}
+.ci:hover{background:#FAFAF8;}
+.cbox{width:18px;height:18px;border:1.5px solid #C4C4C4;border-radius:3px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.ci.done .cbox{background:#C9A84C;border-color:#C9A84C;}
+.ci.done .cbox::after{content:"\2713";color:#fff;font-size:10px;font-weight:700;}
+.ci.done span{opacity:0.38;text-decoration:line-through;}
+.ci span{font-size:13px;color:#3D3D3D;line-height:1.5;user-select:none;}
+.edit-cl-btn{background:#fff;border:1px solid #E8E4DA;color:#6B6B6B;font-family:inherit;font-size:11px;font-weight:500;padding:5px 12px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;}
+.edit-cl-btn:hover{border-color:#C9A84C;color:#9A7A2E;}
+.edit-cl-btn.on{background:#C9A84C;color:#fff;border-color:#C9A84C;font-weight:600;}
+body.cl-editing .ci{cursor:default;}
+body.cl-editing .ci:hover{background:transparent;}
+.ci-del{display:none;width:20px;height:20px;background:#FAEAEA;color:#8B2E2E;border:1px solid #E8C0C0;border-radius:3px;font-size:14px;line-height:1;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;padding:0;}
+body.cl-editing .ci .ci-del{display:flex;}
+body.cl-editing .ci .cbox{pointer-events:none;opacity:0.4;}
+.add-item-row{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed #E8D28A;gap:8px;align-items:center;}
+body.cl-editing .add-item-row{display:flex;}
+.add-item-input{flex:1;border:1px solid #E8E4DA;border-radius:5px;padding:7px 11px;font-family:inherit;font-size:13px;color:#1A1A1A;background:#FAFAF8;outline:none;}
+.add-item-input:focus{border-color:#C9A84C;background:#fff;}
+.add-item-btn{background:#C9A84C;color:#fff;border:none;font-family:inherit;font-size:12px;font-weight:600;padding:7px 14px;border-radius:4px;cursor:pointer;white-space:nowrap;}
+.ci-text-edit{outline:none;border-radius:2px;}
+body.cl-editing .ci-text-edit:hover{background:rgba(201,168,76,0.09);}
+body.cl-editing .ci-text-edit:focus{background:rgba(201,168,76,0.16);box-shadow:0 0 0 2px rgba(201,168,76,0.3);}
+.edit-hint{display:none;font-size:11px;color:#9A7A2E;background:#F7F0DC;border:1px solid #E8D28A;border-radius:4px;padding:5px 10px;margin-bottom:12px;}
+body.cl-editing .edit-hint{display:block;}
+.notes-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;margin-bottom:5px;display:block;margin-top:18px;}
+.notes-input{width:100%;border:1px solid #E8E4DA;border-radius:5px;padding:9px 12px;font-family:inherit;font-size:13px;color:#1A1A1A;background:#FAFAF8;resize:vertical;outline:none;min-height:70px;}
+.notes-input:focus{border-color:#C9A84C;background:#fff;}
+.submit-area{margin-top:16px;padding-top:14px;border-top:1px solid #E8E4DA;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.submit-btn{background:#C9A84C;color:#fff;border:none;font-family:inherit;font-size:12px;font-weight:600;padding:10px 22px;border-radius:5px;cursor:pointer;}
+.submit-btn:hover{background:#9A7A2E;}
+.incomplete-note{font-size:11px;color:#A06020;background:#FDF3E6;border:1px solid #F5D9A8;border-radius:4px;padding:5px 10px;display:none;}
+.incomplete-note.show{display:block;}
+.hist-entry{background:#fff;border:1px solid #E8E4DA;border-radius:8px;margin-bottom:10px;overflow:hidden;}
+.hist-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;gap:12px;}
+.hist-head:hover{background:#FAFAF8;}
+.hist-agent{font-size:15px;font-weight:600;color:#141414;}
+.hist-date{font-size:12px;color:#6B6B6B;}
+.hist-score{font-size:11px;font-weight:600;color:#9A7A2E;background:#F7F0DC;border:1px solid #E8D28A;padding:2px 9px;border-radius:3px;flex-shrink:0;}
+.am-badge{background:#FDF3E6;color:#A06020;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:3px 9px;border-radius:3px;}
+.pm-badge{background:#EAF4EE;color:#2D6A4F;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:3px 9px;border-radius:3px;}
+.audit-badge{background:#F0EEFF;color:#5340B0;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:3px 9px;border-radius:3px;}
+.hist-body{display:none;padding:0 18px 16px;border-top:1px solid #F2F2F0;}
+.hist-body.open{display:block;}
+.hist-chev{font-size:10px;color:#C4C4C4;transition:transform .2s;}
+.hist-chev.open{transform:rotate(180deg);}
+.hist-item{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:12px;color:#3D3D3D;}
+.tick{width:15px;height:15px;border-radius:2px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+.tick.yes{background:#C9A84C;color:#fff;}
+.tick.no{background:#F2F2F0;color:#C4C4C4;border:1px solid #E8E4DA;}
+.hist-notes-block{margin-top:12px;background:#FAFAF8;border:1px solid #F2F2F0;border-radius:5px;padding:10px 12px;font-size:12px;color:#3D3D3D;line-height:1.65;}
+.hist-notes-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;margin-bottom:5px;display:block;}
+.del-hist{background:none;border:none;font-size:12px;color:#C4C4C4;cursor:pointer;padding:2px 6px;border-radius:3px;}
+.del-hist:hover{color:#8B2E2E;background:#FAEAEA;}
+.hist-filter{border:1px solid #E8E4DA;border-radius:5px;padding:6px 10px;font-family:inherit;font-size:12px;color:#1A1A1A;background:#FAFAF8;outline:none;cursor:pointer;}
+.clear-all-btn{background:#fff;color:#8B2E2E;border:1px solid #E8C0C0;font-family:inherit;font-size:11px;font-weight:500;padding:6px 12px;border-radius:4px;cursor:pointer;margin-left:auto;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #E8E4DA;background:#fff;transition:all .15s;display:inline-block;}
+.pin-dot.filled{background:#C9A84C;border-color:#C9A84C;}
+.pin-key{background:#FAFAF8;border:1px solid #E8E4DA;border-radius:6px;font-family:inherit;font-size:18px;font-weight:600;color:#141414;padding:14px;cursor:pointer;transition:all .15s;}
+.pin-key:hover{background:#F7F0DC;border-color:#E8D28A;}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#141414;color:#fff;font-size:13px;font-weight:500;padding:11px 20px;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,0.2);opacity:0;transition:opacity .3s;pointer-events:none;z-index:500;}
+#toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="header">
+  <div id="header-inner">
+    <div id="logo">D</div>
+    <div id="logo-text">The Durham Hotel<span>Shift Checklists</span></div>
+    <div id="shift-badge">Loading...</div>
+    <div id="header-right">
+      <button id="dl-btn" onclick="doDownload()">&#8595; Download</button>
+    </div>
+  </div>
+  <div id="tabbar">
+    <button class="tab active" onclick="switchTab('am',this)">&#9728;&#65039; AM Shift</button>
+    <button class="tab" onclick="switchTab('pm',this)">&#127750; PM Shift</button>
+    <button class="tab" onclick="switchTab('audit',this)">&#127761; Audit Shift</button>
+    <button class="tab" onclick="switchTab('history',this)">&#128203; History</button>
+  </div>
+</div>
+<div id="body">
+<!-- AM -->
+<div id="p-am" class="panel active">
+  <div class="agent-banner">
+    <div class="ab-field">
+      <span class="ab-label">Agent Name</span>
+      <select class="ab-select" id="agent-am" onchange="handleAgentChange('am')">
+        <option value="">Select agent...</option>
+        <option value="__new__">+ Add new name</option>
+      </select>
+    </div>
+    <div class="ab-field new-name" id="new-name-am-wrap">
+      <span class="ab-label">Enter Name</span>
+      <input type="text" class="ab-input" id="new-name-am" placeholder="Full name..." onblur="addNewAgent('am')">
+    </div>
+    <div class="ab-field">
+      <span class="ab-label">Bellman on Duty</span>
+      <select class="ab-select" id="bell-am" onchange="handleBellChange('am')">
+        <option value="">Select bellman...</option>
+        <option value="__new__">+ Add new name</option>
+      </select>
+    </div>
+    <div class="ab-field new-name" id="new-bell-am-wrap">
+      <span class="ab-label">Enter Bellman Name</span>
+      <input type="text" class="ab-input" id="new-bell-am" placeholder="Full name..." onblur="addNewBell('am')">
+    </div>
+    <div class="ab-field">
+      <span class="ab-label">Shift Date</span>
+      <input type="date" class="ab-input" id="date-am">
+    </div>
+  </div>
+  <div class="cl-card">
+    <div class="cl-header">
+      <div><div class="cl-title">AM Shift Checklist</div><div class="cl-shift">Morning Shift</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="am-pct" style="font-size:22px;font-weight:700;color:#C9A84C;">0%</div>
+        <button class="edit-cl-btn" id="edit-btn-am" onclick="toggleEditShift('am')">&#9998; Edit</button>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="am-bar" style="width:0%"></div></div>
+    <div class="progress-label" id="am-done-count">0 of 23 complete</div>
+    <div class="edit-hint">Click item text to edit. Red x to remove. Add new items below.</div>
+    <div id="am-list">
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Receive verbal pass-on and read previous shift notes</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Begin new pass-on</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Review group resume notes for the day</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Start shift report</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Count drawer</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Sign out walkie(s)</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Review all comments and alerts for today arrivals</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Assign rooms and check for overbooking</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Review partner centrals for missed reservations and respond to message inquiries</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Print registration cards</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Add Expedia vouchers and drink tokens to registration cards</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Check OOO and OOS rooms</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Check email inbox and keep organized throughout shift</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Create confirmation call spreadsheet and complete calls</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Have bell team check due-outs at 12:00 and review room status screen first</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Review checked-out guest account for extraneous charges</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Check out all remaining rooms at 12:00</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Follow up with management about any remaining open folios</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Remove reg. cards from the bucket</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Count drawer before end of shift</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Close cashier and log out of SNT</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Update and send pass-on</span></div>
+      <div class="ci" onclick="ciClick(this,'am')"><div class="cbox"></div><span>Retrieve radios and sign shift report</span></div>
+    </div>
+    <div class="add-item-row" id="add-row-am">
+      <input type="text" class="add-item-input" id="add-input-am" placeholder="New checklist item..." onkeydown="if(event.key==='Enter')addItem('am')">
+      <button class="add-item-btn" onclick="addItem('am')">+ Add</button>
+    </div>
+    <span class="notes-label">Shift Notes / Pass-On</span>
+    <textarea class="notes-input" id="notes-am" placeholder="Add any notes for the next shift..."></textarea>
+    <div class="submit-area">
+      <button class="submit-btn" onclick="submitChecklist('am')">Submit AM Shift</button>
+      <span class="incomplete-note" id="incomplete-am">Please select an agent name before submitting.</span>
+    </div>
+  </div>
+</div>
+
+<!-- PM -->
+<div id="p-pm" class="panel">
+  <div class="agent-banner">
+    <div class="ab-field">
+      <span class="ab-label">Agent Name</span>
+      <select class="ab-select" id="agent-pm" onchange="handleAgentChange('pm')">
+        <option value="">Select agent...</option>
+        <option value="__new__">+ Add new name</option>
+      </select>
+    </div>
+    <div class="ab-field new-name" id="new-name-pm-wrap">
+      <span class="ab-label">Enter Name</span>
+      <input type="text" class="ab-input" id="new-name-pm" placeholder="Full name..." onblur="addNewAgent('pm')">
+    </div>
+    <div class="ab-field">
+      <span class="ab-label">Bellman on Duty</span>
+      <select class="ab-select" id="bell-pm" onchange="handleBellChange('pm')">
+        <option value="">Select bellman...</option>
+        <option value="__new__">+ Add new name</option>
+      </select>
+    </div>
+    <div class="ab-field new-name" id="new-bell-pm-wrap">
+      <span class="ab-label">Enter Bellman Name</span>
+      <input type="text" class="ab-input" id="new-bell-pm" placeholder="Full name..." onblur="addNewBell('pm')">
+    </div>
+    <div class="ab-field">
+      <span class="ab-label">Shift Date</span>
+      <input type="date" class="ab-input" id="date-pm">
+    </div>
+  </div>
+  <div class="cl-card">
+    <div class="cl-header">
+      <div><div class="cl-title">PM Shift Checklist</div><div class="cl-shift">Evening Shift</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="pm-pct" style="font-size:22px;font-weight:700;color:#C9A84C;">0%</div>
+        <button class="edit-cl-btn" id="edit-btn-pm" onclick="toggleEditShift('pm')">&#9998; Edit</button>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="pm-bar" style="width:0%"></div></div>
+    <div class="progress-label" id="pm-done-count">0 of 18 complete</div>
+    <div class="edit-hint">Click item text to edit. Red x to remove. Add new items below.</div>
+    <div id="pm-list">
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Receive verbal pass-on and read previous shift notes</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Begin new pass-on</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Review group resume notes for the day</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Start shift report and count drawer</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Sign out walkie(s)</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Complete minibars</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Review all comments and alerts for today arrivals</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Complete any unfinished confirmation calls</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Follow up with management about remaining open folios</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Review partner centrals for missed reservations</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Check room assignments and overbooking</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Check OOO and OOS rooms</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Check email inbox throughout shift</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Dim lobby lights at 5pm</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Count drawer before end of shift</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Close cashier and log out of SNT</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Update and send pass-on</span></div>
+      <div class="ci" onclick="ciClick(this,'pm')"><div class="cbox"></div><span>Retrieve radios and sign shift report</span></div>
+    </div>
+    <div class="add-item-row" id="add-row-pm">
+      <input type="text" class="add-item-input" id="add-input-pm" placeholder="New checklist item..." onkeydown="if(event.key==='Enter')addItem('pm')">
+      <button class="add-item-btn" onclick="addItem('pm')">+ Add</button>
+    </div>
+    <span class="notes-label">Shift Notes / Pass-On</span>
+    <textarea class="notes-input" id="notes-pm" placeholder="Add any notes for the next shift..."></textarea>
+    <div class="submit-area">
+      <button class="submit-btn" onclick="submitChecklist('pm')">Submit PM Shift</button>
+      <span class="incomplete-note" id="incomplete-pm">Please select an agent name before submitting.</span>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIT -->
+<div id="p-audit" class="panel">
+  <div class="agent-banner">
+    <div class="ab-field">
+      <span class="ab-label">Agent Name</span>
+      <select class="ab-select" id="agent-audit" onchange="handleAgentChange('audit')">
+        <option value="">Select agent...</option>
+        <option value="__new__">+ Add new name</option>
+      </select>
+    </div>
+    <div class="ab-field new-name" id="new-name-audit-wrap">
+      <span class="ab-label">Enter Name</span>
+      <input type="text" class="ab-input" id="new-name-audit" placeholder="Full name..." onblur="addNewAgent('audit')">
+    </div>
+    <div class="ab-field">
+      <span class="ab-label">Shift Date</span>
+      <input type="date" class="ab-input" id="date-audit">
+    </div>
+  </div>
+  <div class="cl-card">
+    <div class="cl-header">
+      <div><div class="cl-title">Audit Shift Checklist</div><div class="cl-shift">Overnight</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="audit-pct" style="font-size:22px;font-weight:700;color:#C9A84C;">0%</div>
+        <button class="edit-cl-btn" id="edit-btn-audit" onclick="toggleEditShift('audit')">&#9998; Edit</button>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="audit-bar" style="width:0%"></div></div>
+    <div class="progress-label" id="audit-done-count">0 of 21 complete</div>
+    <div class="edit-hint">Click item text to edit. Red x to remove. Add new items below.</div>
+    <div id="audit-list">
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Receive verbal pass-on and read email pass-on</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Prep coffee cart (optional)</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Count cash drawer</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Collect audit pack documents</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Check Night Audit and Accounting email inboxes</span></div>
+      <div class="ctm">After 12am</div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Log into Toast and fill in F&amp;B Flash Data</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Run Arrivals report and email to wcordova, jsimpson, randerton @thedurham.com</span></div>
+      <div class="ctm">After 2am</div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Take coffee cart, set out packs for 6am and 7am orders, collect room tags</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Set out stands for each coffee tag</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Prep additions for 6am and 7am coffee orders</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Pre-grind coffee for complimentary stand and pour milk into carafe</span></div>
+      <div class="ctm">After 3am</div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Forward End of Day Reports from admin@stayntouch.com to management team</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Check no-show report and charge no-shows per policy</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Print Guest Balance Report and scan to management team</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Run Market Segment Statistics report (Excel) and In-House Guests report (print)</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Use Market report to complete Flash Report and STR data fields</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Hang In-House Guest report on the kitchen bulletin board</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Check arrivals for requests, preferences, and packages</span></div>
+      <div class="ctm">5:30am</div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Brew coffee and run 6am orders</span></div>
+      <div class="ctm">6:30am</div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Run 7am orders and set out coffee stand</span></div>
+      <div class="ci" onclick="ciClick(this,'audit')"><div class="cbox"></div><span>Check and send pass-on</span></div>
+    </div>
+    <div class="add-item-row" id="add-row-audit">
+      <input type="text" class="add-item-input" id="add-input-audit" placeholder="New checklist item..." onkeydown="if(event.key==='Enter')addItem('audit')">
+      <button class="add-item-btn" onclick="addItem('audit')">+ Add</button>
+    </div>
+    <span class="notes-label">Shift Notes / Pass-On</span>
+    <textarea class="notes-input" id="notes-audit" placeholder="Add any notes for the AM shift..."></textarea>
+    <div class="submit-area">
+      <button class="submit-btn" onclick="submitChecklist('audit')">Submit Audit Shift</button>
+      <span class="incomplete-note" id="incomplete-audit">Please select an agent name before submitting.</span>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="p-history" class="panel">
+  <div style="margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h2 style="font-size:26px;font-weight:600;color:#141414;">Shift History</h2>
+      <p style="font-size:13px;color:#6B6B6B;margin-top:4px;">All submitted checklists stored in this file.</p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <select class="hist-filter" id="hist-shift-filter" onchange="renderHistory()">
+      <option value="all">All shifts</option>
+      <option value="am">AM only</option>
+      <option value="pm">PM only</option>
+      <option value="audit">Audit only</option>
+    </select>
+    <select class="hist-filter" id="hist-agent-filter" onchange="renderHistory()">
+      <option value="all">All agents</option>
+    </select>
+    <button class="clear-all-btn" onclick="clearHistory()">Clear all history</button>
+  </div>
+  <div id="history-list"></div>
+  <div id="history-empty" style="display:none;text-align:center;padding:60px 20px;color:#6B6B6B;">
+    <div style="font-size:32px;">&#128203;</div>
+    <p style="font-size:13px;margin-top:8px;">No submissions yet.</p>
+  </div>
+</div>
+
+</div>
+<div id="toast"></div>
+<script>
+var AGENTS = [];
+var BELLMEN = [];
+var HISTORY = [];
+
+(function(){
+  var sa = document.getElementById('saved-agents');
+  var sb = document.getElementById('saved-bellmen');
+  var sh = document.getElementById('saved-history');
+  if(sa) try{AGENTS=JSON.parse(sa.textContent)||[];}catch(e){}
+  if(sb) try{BELLMEN=JSON.parse(sb.textContent)||[];}catch(e){}
+  if(sh) try{HISTORY=JSON.parse(sh.textContent)||[];}catch(e){}
+})();
+
+function switchTab(id, btn) {
+  ['am','pm','audit','history'].forEach(function(p){
+    document.getElementById('p-'+p).classList.toggle('active', p===id);
+  });
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  if(id==='history') renderHistory();
+  window.scrollTo(0,0);
+}
+
+(function init(){
+  var today = new Date().toISOString().split('T')[0];
+  ['am','pm','audit'].forEach(function(s){
+    document.getElementById('date-'+s).value = today;
+  });
+  var h = new Date().getHours();
+  var badge = document.getElementById('shift-badge');
+  if(h>=7&&h<15) badge.textContent='AM Shift';
+  else if(h>=15&&h<23) badge.textContent='PM Shift';
+  else badge.textContent='Audit Shift';
+  rebuildAgentDropdowns();
+  rebuildBellDropdowns();
+  renderHistory();
+})();
+
+function rebuildAgentDropdowns(){
+  ['am','pm','audit'].forEach(function(shift){
+    var sel = document.getElementById('agent-'+shift);
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">Select agent...</option>';
+    AGENTS.forEach(function(n){
+      var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);
+    });
+    var no=document.createElement('option');no.value='__new__';no.textContent='+ Add new name';sel.appendChild(no);
+    if(cur&&AGENTS.indexOf(cur)>=0) sel.value=cur;
+  });
+}
+
+function handleAgentChange(shift){
+  var sel=document.getElementById('agent-'+shift);
+  var wrap=document.getElementById('new-name-'+shift+'-wrap');
+  if(sel.value==='__new__'){wrap.classList.add('show');document.getElementById('new-name-'+shift).focus();}
+  else{wrap.classList.remove('show');}
+}
+
+function addNewAgent(shift){
+  var inp=document.getElementById('new-name-'+shift);
+  var name=inp.value.trim();
+  if(!name) return;
+  if(AGENTS.indexOf(name)<0){AGENTS.push(name);AGENTS.sort();}
+  rebuildAgentDropdowns();
+  document.getElementById('agent-'+shift).value=name;
+  document.getElementById('new-name-'+shift+'-wrap').classList.remove('show');
+  inp.value='';
+  updateHistAgentFilter();
+}
+
+function rebuildBellDropdowns(){
+  ['am','pm'].forEach(function(shift){
+    var sel=document.getElementById('bell-'+shift);
+    if(!sel) return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="">Select bellman...</option>';
+    BELLMEN.forEach(function(n){
+      var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);
+    });
+    var no=document.createElement('option');no.value='__new__';no.textContent='+ Add new name';sel.appendChild(no);
+    if(cur&&BELLMEN.indexOf(cur)>=0) sel.value=cur;
+  });
+}
+
+function handleBellChange(shift){
+  var sel=document.getElementById('bell-'+shift);
+  var wrap=document.getElementById('new-bell-'+shift+'-wrap');
+  if(sel.value==='__new__'){wrap.classList.add('show');document.getElementById('new-bell-'+shift).focus();}
+  else{wrap.classList.remove('show');}
+}
+
+function addNewBell(shift){
+  var inp=document.getElementById('new-bell-'+shift);
+  var name=inp.value.trim();
+  if(!name) return;
+  if(BELLMEN.indexOf(name)<0){BELLMEN.push(name);BELLMEN.sort();}
+  rebuildBellDropdowns();
+  document.getElementById('bell-'+shift).value=name;
+  document.getElementById('new-bell-'+shift+'-wrap').classList.remove('show');
+  inp.value='';
+}
+
+function ciClick(el,shift){ if(!editingShifts[shift]) chk(el,shift); }
+
+function chk(el,shift){ el.classList.toggle('done'); updateProgress(shift); }
+
+function updateProgress(shift){
+  var list=document.getElementById(shift+'-list');
+  var items=list.querySelectorAll('.ci');
+  var done=list.querySelectorAll('.ci.done').length;
+  var total=items.length;
+  var pct=total>0?Math.round((done/total)*100):0;
+  document.getElementById(shift+'-pct').textContent=pct+'%';
+  document.getElementById(shift+'-bar').style.width=pct+'%';
+  document.getElementById(shift+'-done-count').textContent=done+' of '+total+' complete';
+}
+
+var editingShifts={am:false,pm:false,audit:false};
+
+function toggleEditShift(shift){
+  editingShifts[shift]=!editingShifts[shift];
+  var btn=document.getElementById('edit-btn-'+shift);
+  btn.classList.toggle('on',editingShifts[shift]);
+  btn.innerHTML=editingShifts[shift]?'&#10003; Done':'&#9998; Edit';
+  var anyEditing=Object.keys(editingShifts).some(function(s){return editingShifts[s];});
+  document.body.classList.toggle('cl-editing',anyEditing);
+  var list=document.getElementById(shift+'-list');
+  if(editingShifts[shift]){
+    list.querySelectorAll('.ci').forEach(function(ci){
+      if(!ci.querySelector('.ci-del')){
+        var d=document.createElement('button');
+        d.className='ci-del';d.innerHTML='&times;';d.title='Remove';
+        d.onclick=function(e){e.stopPropagation();ci.remove();updateProgress(shift);};
+        ci.insertBefore(d,ci.firstChild);
+      }
+      var sp=ci.querySelector('span');
+      if(sp){sp.contentEditable='true';sp.spellcheck=true;sp.classList.add('ci-text-edit');}
+    });
+  } else {
+    list.querySelectorAll('.ci-del').forEach(function(b){b.remove();});
+    list.querySelectorAll('.ci span').forEach(function(sp){sp.contentEditable='false';sp.spellcheck=false;});
+    document.getElementById('add-input-'+shift).value='';
+  }
+}
+
+function addItem(shift){
+  var inp=document.getElementById('add-input-'+shift);
+  var text=inp.value.trim();
+  if(!text){inp.focus();return;}
+  var list=document.getElementById(shift+'-list');
+  var ci=document.createElement('div');
+  ci.className='ci';
+  ci.setAttribute('onclick',"ciClick(this,'"+shift+"')");
+  var d=document.createElement('button');
+  d.className='ci-del';d.innerHTML='&times;';
+  d.onclick=function(e){e.stopPropagation();ci.remove();updateProgress(shift);};
+  var cbox=document.createElement('div');cbox.className='cbox';
+  var sp=document.createElement('span');
+  sp.textContent=text;sp.contentEditable='true';sp.spellcheck=true;sp.className='ci-text-edit';
+  ci.appendChild(d);ci.appendChild(cbox);ci.appendChild(sp);
+  list.appendChild(ci);
+  inp.value='';inp.focus();
+  updateProgress(shift);
+}
+
+function submitChecklist(shift){
+  var agentEl=document.getElementById('agent-'+shift);
+  var agent=agentEl.value;
+  var incompEl=document.getElementById('incomplete-'+shift);
+  if(!agent||agent==='__new__'){
+    incompEl.textContent='Please select an agent name before submitting.';
+    incompEl.classList.add('show');agentEl.focus();return;
+  }
+  var date=document.getElementById('date-'+shift).value||new Date().toISOString().split('T')[0];
+  var notes=document.getElementById('notes-'+shift).value.trim();
+  var bellman='';
+  if(shift==='am'||shift==='pm'){
+    var bel=document.getElementById('bell-'+shift);
+    if(bel&&bel.value&&bel.value!=='__new__') bellman=bel.value;
+  }
+  var list=document.getElementById(shift+'-list');
+  var items=list.querySelectorAll('.ci');
+  var itemData=[];
+  items.forEach(function(item){
+    itemData.push({text:item.querySelector('span').textContent,done:item.classList.contains('done')});
+  });
+  var done=itemData.filter(function(i){return i.done;}).length;
+  var entry={id:Date.now(),shift:shift,agent:agent,bellman:bellman,date:date,
+    submitted:new Date().toISOString(),items:itemData,done:done,total:itemData.length,notes:notes};
+  HISTORY.unshift(entry);
+  incompEl.classList.remove('show');
+  items.forEach(function(item){item.classList.remove('done');});
+  document.getElementById('notes-'+shift).value='';
+  updateProgress(shift);
+  document.getElementById('date-'+shift).value=new Date().toISOString().split('T')[0];
+  showToast('Shift submitted and saved to history');
+  updateHistAgentFilter();
+  renderHistory();
+}
+
+function renderHistory(){
+  var shiftF=document.getElementById('hist-shift-filter').value;
+  var agentF=document.getElementById('hist-agent-filter').value;
+  var list=document.getElementById('history-list');
+  var empty=document.getElementById('history-empty');
+  var filtered=HISTORY.filter(function(e){
+    return(shiftF==='all'||e.shift===shiftF)&&(agentF==='all'||e.agent===agentF);
+  });
+  if(!filtered.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=filtered.map(function(e){
+    var pct=Math.round((e.done/e.total)*100);
+    var sLabel=e.shift==='am'?'AM Shift':e.shift==='pm'?'PM Shift':'Audit Shift';
+    var bClass=e.shift==='am'?'am-badge':e.shift==='pm'?'pm-badge':'audit-badge';
+    var dateStr=formatDate(e.date);
+    var timeStr=formatTime(e.submitted);
+    var itemsHtml=e.items.map(function(item){
+      return '<div class="hist-item"><div class="tick '+(item.done?'yes':'no')+'">'+(item.done?'&#10003;':'')+
+        '</div><span>'+item.text+'</span></div>';
+    }).join('');
+    var notesHtml=e.notes?'<div class="hist-notes-block"><span class="hist-notes-lbl">Shift Notes</span>'+e.notes+'</div>':'';
+    var bellHtml=e.bellman?'&nbsp;&middot;&nbsp; Bell: '+e.bellman:'';
+    return '<div class="hist-entry">'+
+      '<div class="hist-head" onclick="toggleHist(this)">'+
+      '<div>'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">'+
+      '<span class="hist-agent">'+e.agent+'</span>'+
+      '<span class="'+bClass+'">'+sLabel+'</span></div>'+
+      '<div class="hist-date">'+dateStr+'&nbsp;&middot;&nbsp;Submitted '+timeStr+bellHtml+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+      '<span class="hist-score">'+pct+'% ('+e.done+'/'+e.total+')</span>'+
+      '<button class="del-hist" onclick="deleteEntry(event,'+e.id+')">&#10005;</button>'+
+      '<span class="hist-chev">&#9660;</span></div></div>'+
+      '<div class="hist-body"><div style="margin-top:14px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;margin-bottom:8px;">Checklist items</div>'+
+      itemsHtml+notesHtml+'</div></div>';
+  }).join('');
+}
+
+function toggleHist(header){
+  var body=header.nextElementSibling;
+  var chev=header.querySelector('.hist-chev');
+  var open=body.classList.contains('open');
+  body.classList.toggle('open',!open);
+  body.style.display=open?'none':'block';
+  if(chev) chev.classList.toggle('open',!open);
+}
+
+function deleteEntry(e,id){
+  e.stopPropagation();
+  if(!confirm('Remove this entry?')) return;
+  HISTORY=HISTORY.filter(function(entry){return entry.id!==id;});
+  renderHistory();
+}
+
+function clearHistory(){
+  if(!HISTORY.length) return;
+  if(!confirm('Clear all shift history? This cannot be undone.')) return;
+  HISTORY=[];renderHistory();showToast('History cleared');
+}
+
+function updateHistAgentFilter(){
+  var sel=document.getElementById('hist-agent-filter');
+  var cur=sel.value;
+  sel.innerHTML='<option value="all">All agents</option>';
+  var agents=[];
+  HISTORY.forEach(function(e){if(agents.indexOf(e.agent)<0)agents.push(e.agent);});
+  agents.sort().forEach(function(a){var o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
+  if(cur&&agents.indexOf(cur)>=0) sel.value=cur;
+}
+
+function formatDate(ds){
+  if(!ds) return '';
+  var d=new Date(ds+'T12:00:00');
+  return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+}
+
+function formatTime(iso){
+  if(!iso) return '';
+  var d=new Date(iso);
+  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2800);
+}
+
+function doDownload(){
+  var src = document.documentElement.outerHTML;
+  src = src.replace(/<script id="saved-agents"[^>]*>[\s\S]*?<\/script>/g,'');
+  src = src.replace(/<script id="saved-bellmen"[^>]*>[\s\S]*?<\/script>/g,'');
+  src = src.replace(/<script id="saved-history"[^>]*>[\s\S]*?<\/script>/g,'');
+  var ds = '<script id="saved-agents" type="application/json">'+JSON.stringify(AGENTS)+'<\/script>'
+    + '\n<script id="saved-bellmen" type="application/json">'+JSON.stringify(BELLMEN)+'<\/script>'
+    + '\n<script id="saved-history" type="application/json">'+JSON.stringify(HISTORY)+'<\/script>';
+  src = src.replace('<\/body>', ds+'\n<\/body>');
+  var blob=new Blob(['<!DOCTYPE html>\n'+src],{type:'text/html'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='durham_shift_checklists.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  showToast('File saved');
+}
+</script>
+</body>
+</html>
