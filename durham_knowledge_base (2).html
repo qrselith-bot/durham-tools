@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Durham Hotel — Front Desk Knowledge Base</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #FAFAF8; color: #1A1A1A; font-size: 14px; line-height: 1.6; }
+
+/* HEADER */
+#header { background: #fff; border-bottom: 2px solid #C9A84C; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+#header-inner { display: flex; align-items: center; padding: 10px 24px; gap: 14px; flex-wrap: wrap; }
+#logo { width: 36px; height: 36px; background: #C9A84C; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; border-radius: 2px; flex-shrink: 0; }
+#logo-text { font-size: 16px; font-weight: 600; color: #141414; line-height: 1.2; flex-shrink: 0; }
+#logo-text span { display: block; font-size: 9px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; color: #6B6B6B; margin-top: 2px; }
+#search { flex: 1; min-width: 200px; max-width: 440px; padding: 7px 12px 7px 34px; border: 1px solid #E8E4DA; border-radius: 6px; font-size: 13px; background: #F2F2F0; color: #1A1A1A; outline: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23C9A84C' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 11px center; transition: border-color .2s; }
+#search:focus { border-color: #C9A84C; background-color: #fff; box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+#search::placeholder { color: #C4C4C4; }
+#header-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+#shift-badge { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #9A7A2E; background: #F7F0DC; border: 1px solid #E8D28A; border-radius: 4px; padding: 5px 10px; }
+#dl-btn { background: #C9A84C; color: #fff; border: none; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; padding: 7px 14px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+#dl-btn:hover { background: #9A7A2E; }
+#dl-toast { font-size: 11px; color: #2D6A4F; font-weight: 500; opacity: 0; transition: opacity .3s; white-space: nowrap; }
+
+/* NOTICES */
+#notices { background: #F7F0DC; border-bottom: 1px solid #E8D28A; padding: 7px 24px; font-size: 12px; color: #6B6B6B; display: flex; gap: 12px; align-items: center; }
+#notices b { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #9A7A2E; flex-shrink: 0; padding-right: 12px; border-right: 1px solid #E8D28A; }
+#notice-text { flex: 1; }
+
+/* TABS */
+#tabbar { background: #fff; border-bottom: 1px solid #E8E4DA; display: flex; padding: 0 24px; overflow-x: auto; }
+#tabbar::-webkit-scrollbar { height: 3px; }
+#tabbar::-webkit-scrollbar-thumb { background: #E8D28A; }
+.tab { background: none; border: none; border-bottom: 2px solid transparent; color: #6B6B6B; font-family: inherit; font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; padding: 10px 14px; cursor: pointer; white-space: nowrap; margin-bottom: -1px; transition: all .15s; }
+.tab:hover { color: #1A1A1A; }
+.tab.active { color: #9A7A2E; border-bottom-color: #C9A84C; font-weight: 600; }
+
+/* MAIN BODY */
+#body { max-width: 1060px; margin: 0 auto; padding: 28px 24px 80px; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* PAGE HEADER */
+.ph { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid #E8E4DA; }
+.ph h2 { font-size: 28px; font-weight: 600; color: #141414; }
+.ph p { font-size: 13px; color: #6B6B6B; margin-top: 5px; max-width: 560px; }
+
+/* SECTION TITLE */
+.st { font-size: 9px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #9A7A2E; margin: 24px 0 12px; display: flex; align-items: center; gap: 10px; }
+.st::after { content: ""; flex: 1; height: 1px; background: #E8E4DA; }
+
+/* GOLD BLOCK */
+.gold-block { background: #C9A84C; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; display: flex; gap: 18px; }
+.gold-block h3 { font-size: 17px; font-weight: 600; color: #fff; margin-bottom: 7px; }
+.gold-block p { font-size: 13px; color: rgba(255,255,255,0.92); line-height: 1.75; }
+.gold-block strong { color: #fff; }
+.gold-icon { font-size: 26px; flex-shrink: 0; margin-top: 2px; }
+
+/* DECISION TREE */
+.dtree { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; }
+.dtree h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #141414; }
+.dstep { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid #F2F2F0; }
+.dstep:last-child { border-bottom: none; padding-bottom: 0; }
+.dnum { width: 26px; height: 26px; border-radius: 50%; background: #F7F0DC; border: 1px solid #E8D28A; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #9A7A2E; flex-shrink: 0; margin-top: 1px; }
+.dq { font-size: 13px; font-weight: 600; color: #1A1A1A; margin-bottom: 3px; }
+.dsub { font-size: 12px; color: #6B6B6B; margin-bottom: 7px; }
+.dans { display: flex; flex-wrap: wrap; gap: 7px; }
+.dyes { background: #EAF4EE; color: #2D6A4F; border: 1px solid #B7DFC9; border-radius: 4px; padding: 3px 11px; font-size: 11px; font-weight: 500; }
+.dno { background: #F2F2F0; color: #6B6B6B; border: 1px solid #E8E4DA; border-radius: 4px; padding: 3px 11px; font-size: 11px; font-weight: 500; }
+
+/* CARDS GRID */
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 8px; }
+.card { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; padding: 16px 18px; }
+.ctype { font-size: 8px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; margin-bottom: 7px; }
+.ctype.go { color: #2D6A4F; } .ctype.hold { color: #8B2E2E; } .ctype.warn { color: #A06020; }
+.card h3 { font-size: 15px; font-weight: 600; color: #141414; margin-bottom: 9px; }
+.card ul { list-style: none; }
+.card li { font-size: 12px; color: #3D3D3D; padding: 4px 0; border-bottom: 1px solid #F2F2F0; line-height: 1.5; }
+.card li:last-child { border-bottom: none; }
+
+/* CALLOUT */
+.callout { background: #fff; border: 1px solid #E8E4DA; border-left: 3px solid #C9A84C; border-radius: 0 6px 6px 0; padding: 14px 18px; margin-bottom: 14px; display: flex; gap: 14px; }
+.callout h3 { font-size: 14px; font-weight: 600; color: #141414; margin-bottom: 4px; }
+.callout p { font-size: 12px; color: #3D3D3D; line-height: 1.7; }
+.callout strong { color: #141414; }
+
+/* TABLE */
+.twrap { border: 1px solid #E8E4DA; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+.twrap table { width: 100%; border-collapse: collapse; }
+.twrap th { background: #FAFAF8; font-size: 9px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: #6B6B6B; padding: 9px 14px; text-align: left; border-bottom: 1px solid #E8E4DA; }
+.twrap td { padding: 10px 14px; font-size: 12px; border-bottom: 1px solid #F2F2F0; color: #3D3D3D; vertical-align: middle; }
+.twrap tr:last-child td { border-bottom: none; }
+.twrap tr:hover td { background: rgba(201,168,76,0.03); }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+.bgo { background: #EAF4EE; color: #2D6A4F; } .bhold { background: #FAEAEA; color: #8B2E2E; } .bwarn { background: #FDF3E6; color: #A06020; }
+
+/* SCENARIOS */
+.scen { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+.shead { padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; gap: 10px; user-select: none; }
+.shead:hover { background: #FAFAF8; }
+.shead h4 { font-size: 15px; font-weight: 600; color: #141414; line-height: 1.2; }
+.smeta { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.stag { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; }
+.tgo { background: #EAF4EE; color: #2D6A4F; } .thold { background: #FAEAEA; color: #8B2E2E; } .twrn { background: #FDF3E6; color: #A06020; }
+.chev { font-size: 11px; color: #C4C4C4; display: inline-block; transition: transform .2s; }
+.chev.open { transform: rotate(180deg); }
+.sbody { display: none; padding: 0 18px 18px; border-top: 1px solid #F2F2F0; }
+.sbody.open { display: block; }
+.sstep { margin-top: 14px; }
+.slabel { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #9A7A2E; margin-bottom: 5px; display: block; }
+.sstep p { font-size: 13px; color: #3D3D3D; line-height: 1.7; }
+.atag { display: inline-block; background: #F7F0DC; color: #9A7A2E; border: 1px solid #E8D28A; border-radius: 3px; padding: 2px 9px; font-size: 11px; margin: 2px 2px 2px 0; }
+
+/* PHRASE CARDS */
+.pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+.pcard { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; padding: 14px 16px; }
+.psit { font-size: 9px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: #9A7A2E; margin-bottom: 8px; }
+.pcard blockquote { font-size: 14px; font-style: italic; color: #1A1A1A; border-left: 2px solid #C9A84C; padding-left: 11px; line-height: 1.6; }
+
+/* CHECKLISTS */
+.cwrap { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; padding: 18px 20px; margin-bottom: 14px; }
+.ctitle { font-size: 19px; font-weight: 600; color: #141414; margin-bottom: 2px; }
+.cmeta { font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #9A7A2E; margin-bottom: 14px; display: block; }
+.ctm { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #9A7A2E; background: #F7F0DC; border: 1px solid #E8D28A; padding: 3px 10px; border-radius: 3px; display: inline-block; margin: 9px 0 5px; pointer-events: none; }
+.ci { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid #F2F2F0; cursor: pointer; }
+.ci:last-of-type { border-bottom: none; }
+.cbox { width: 17px; height: 17px; border: 1.5px solid #C4C4C4; border-radius: 3px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.ci.done .cbox { background: #C9A84C; border-color: #C9A84C; }
+.ci.done .cbox::after { content: "✓"; color: #fff; font-size: 10px; font-weight: 700; }
+.ci.done span { opacity: 0.35; text-decoration: line-through; }
+.ci span { font-size: 13px; color: #3D3D3D; line-height: 1.5; }
+
+/* INFO BLOCKS */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.iblock { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; padding: 16px 18px; margin-bottom: 10px; }
+.iblock h3 { font-size: 15px; font-weight: 600; color: #141414; margin-bottom: 9px; }
+.iblock p { font-size: 13px; color: #3D3D3D; line-height: 1.7; margin-bottom: 7px; }
+.iblock p:last-child { margin-bottom: 0; }
+.iblock ul { list-style: none; }
+.iblock li { font-size: 13px; color: #3D3D3D; padding: 4px 0; border-bottom: 1px solid #F2F2F0; line-height: 1.5; }
+.iblock li:last-child { border-bottom: none; }
+.iblock li::before { content: "› "; color: #C9A84C; font-weight: 700; }
+
+/* ROOMS */
+.rgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 8px; }
+.rcard { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; padding: 16px 18px; }
+.rcode { font-size: 9px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #9A7A2E; background: #F7F0DC; border: 1px solid #E8D28A; padding: 2px 9px; border-radius: 3px; display: inline-block; margin-bottom: 8px; }
+.rname { font-size: 15px; font-weight: 600; color: #141414; margin-bottom: 8px; }
+.rdetail { font-size: 12px; color: #6B6B6B; line-height: 1.9; }
+.rdetail strong { color: #3D3D3D; font-weight: 500; }
+
+/* CONTACTS */
+.kgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 10px; margin-bottom: 8px; }
+.kcard { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; padding: 13px 15px; }
+.krole { font-size: 8px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: #9A7A2E; margin-bottom: 3px; }
+.kname { font-size: 14px; font-weight: 600; color: #141414; margin-bottom: 5px; }
+.kdet { font-size: 12px; color: #6B6B6B; line-height: 1.75; }
+.kdet strong { color: #1A1A1A; font-weight: 600; }
+.ebox { background: #FAEAEA; border: 1px solid #E8C0C0; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; }
+.ebox h3 { color: #8B2E2E; font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+.erow { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(139,46,46,0.09); font-size: 13px; }
+.erow:last-child { border-bottom: none; }
+.elab { color: #3D3D3D; }
+.enum { font-weight: 700; color: #8B2E2E; letter-spacing: 0.5px; font-size: 14px; }
+
+/* SEARCH RESULTS */
+.sr-item { background: #fff; border: 1px solid #E8E4DA; border-radius: 6px; padding: 12px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s; }
+.sr-item:hover { border-color: #C9A84C; }
+.sr-section { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #9A7A2E; margin-bottom: 3px; }
+.sr-title { font-size: 15px; font-weight: 600; color: #141414; }
+mark { background: #F7F0DC; padding: 0 2px; border-radius: 2px; }
+.no-results { text-align: center; padding: 50px 20px; color: #6B6B6B; font-size: 14px; }
+.hint { font-size: 11px; color: #6B6B6B; background: #F2F2F0; border-radius: 5px; padding: 6px 10px; margin-bottom: 12px; }
+
+@media (max-width: 600px) {
+  .two-col, .pgrid { grid-template-columns: 1fr; }
+  .cgrid { grid-template-columns: 1fr; }
+  #header-inner { gap: 8px; }
+  #search { min-width: 0; }
+}
+
+/* EDIT MODE */
+.edit-btn { background: #fff; border: 1px solid #E8E4DA; color: #6B6B6B; font-family: inherit; font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all .15s; }
+.edit-btn:hover { border-color: #C9A84C; color: #9A7A2E; }
+.edit-btn.on { background: #C9A84C; color: #fff; border-color: #C9A84C; font-weight: 600; }
+body.editing [contenteditable] { outline: none; border-radius: 2px; }
+body.editing [contenteditable]:hover { background: rgba(201,168,76,0.09); cursor: text; }
+body.editing [contenteditable]:focus { background: rgba(201,168,76,0.16); box-shadow: 0 0 0 2px rgba(201,168,76,0.35); }
+.del-x { display: none; position: absolute; top: 7px; right: 8px; width: 20px; height: 20px; background: #8B2E2E; color: #fff; border: none; border-radius: 50%; font-size: 14px; line-height: 1; cursor: pointer; align-items: center; justify-content: center; z-index: 20; opacity: 0; transition: opacity .15s; padding: 0; }
+body.editing .has-del { position: relative; }
+body.editing .has-del .del-x { display: flex; }
+body.editing .has-del:hover .del-x { opacity: 1; }
+.add-row { display: none; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+body.editing .add-row { display: flex; }
+.add-btn { background: #fff; border: 1.5px dashed #E8D28A; color: #9A7A2E; font-family: inherit; font-size: 11px; font-weight: 500; padding: 6px 14px; border-radius: 5px; cursor: pointer; transition: all .15s; }
+.add-btn:hover { border-color: #C9A84C; background: #F7F0DC; }
+
+/* NEW SITUATION MODAL */
+#sit-modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+#sit-modal-bg.open { display: flex; }
+#sit-modal { background: #fff; border-radius: 10px; padding: 28px 28px 24px; width: 540px; max-width: 95vw; max-height: 88vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+#sit-modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 18px; color: #141414; }
+.mrow { margin-bottom: 14px; }
+.mrow label { display: block; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #9A7A2E; margin-bottom: 5px; }
+.mrow input, .mrow select, .mrow textarea { width: 100%; border: 1px solid #E8E4DA; border-radius: 5px; padding: 8px 11px; font-family: inherit; font-size: 13px; color: #1A1A1A; background: #FAFAF8; outline: none; }
+.mrow input:focus, .mrow select:focus, .mrow textarea:focus { border-color: #C9A84C; background: #fff; }
+.mrow textarea { resize: vertical; min-height: 64px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+.mbtn-primary { background: #C9A84C; color: #fff; border: none; font-family: inherit; font-size: 12px; font-weight: 600; padding: 9px 20px; border-radius: 5px; cursor: pointer; }
+.mbtn-primary:hover { background: #9A7A2E; }
+.mbtn-cancel { background: #fff; color: #6B6B6B; border: 1px solid #E8E4DA; font-family: inherit; font-size: 12px; padding: 9px 18px; border-radius: 5px; cursor: pointer; }
+.mbtn-cancel:hover { border-color: #C9A84C; color: #9A7A2E; }
+
+/* NEW CONTACT MODAL */
+#con-modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+#con-modal-bg.open { display: flex; }
+#con-modal { background: #fff; border-radius: 10px; padding: 28px 28px 24px; width: 400px; max-width: 95vw; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+#con-modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 18px; color: #141414; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="header-inner">
+    <div id="logo">D</div>
+    <div id="logo-text">The Durham Hotel<span>Front Desk Knowledge Base</span></div>
+    <input type="text" id="search" placeholder="Search — walk, upgrade, Expedia, noise, key..." oninput="doSearch(this.value)" autocomplete="off">
+    <div id="header-right">
+      <div id="shift-badge">Loading...</div>
+      <button class="edit-btn" id="edit-btn" onclick="toggleEdit()">&#9998;&nbsp;Edit</button>
+      <button id="dl-btn" onclick="doDownload()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download
+      </button>
+      <span id="dl-toast"></span>
+    </div>
+  </div>
+  <div id="notices">
+    <b>Today</b>
+    <span id="notice-text">No active notices. Click here to add one.</span>
+  </div>
+  <div id="tabbar">
+    <button class="tab active" onclick="switchTab('authority',this)">Your Authority</button>
+    <button class="tab" onclick="switchTab('scenarios',this)">Scenarios</button>
+    <button class="tab" onclick="switchTab('checklists',this)">Checklists</button>
+    <button class="tab" onclick="switchTab('calendar',this)">Calendar</button>
+    <button class="tab" onclick="switchTab('procedures',this)">Procedures</button>
+    <button class="tab" onclick="switchTab('rooms',this)">Room Types</button>
+    <button class="tab" onclick="switchTab('contacts',this)">Contacts</button>
+  </div>
+</div>
+
+<div id="body">
+
+<!-- SEARCH RESULTS -->
+<div id="p-search" class="panel">
+  <div class="ph"><h2 id="sr-title">Results</h2></div>
+  <div id="sr-list"></div>
+</div>
+
+<!-- AUTHORITY -->
+<div id="p-authority" class="panel active">
+  <div class="ph"><h2>Your Authority</h2><p>What you are trusted and empowered to do on your own — and where to draw the line.</p></div>
+  <div class="gold-block">
+    <div class="gold-icon">&#128273;</div>
+    <div>
+      <h3>The Durham Philosophy</h3>
+      <p>You are trusted to make decisions that serve the guest. <strong>Bias toward the guest experience.</strong> If a situation calls for action and you believe it is the right move, do it. You will not be penalized for a good-faith call made in a guest's favor. Act first, ask questions after, and document everything in the pass-on. The only thing that requires a pause is money.</p>
+    </div>
+  </div>
+  <div class="st">Quick decision guide</div>
+  <div class="dtree">
+    <h3>Not sure what to do? Ask these three questions.</h3>
+    <div class="dstep"><div class="dnum">1</div><div><div class="dq">Is anyone in immediate danger or distress?</div><div class="dsub">Medical emergency, fire, threatening behavior, or guest safety concern.</div><div class="dans"><span class="dyes">Yes &#8212; Call 911 immediately, then GM</span><span class="dno">No &#8212; continue to question 2</span></div></div></div>
+    <div class="dstep"><div class="dnum">2</div><div><div class="dq">Does resolving this require adjusting or refunding money?</div><div class="dsub">Rate changes, discounts, refunds, or altering an OTA reservation.</div><div class="dans"><span class="dyes">Yes &#8212; Pause and contact management</span><span class="dno">No &#8212; you are empowered to handle it</span></div></div></div>
+    <div class="dstep"><div class="dnum">3</div><div><div class="dq">Can you make the guest feel genuinely taken care of right now?</div><div class="dsub">A room move, a token, a voucher, an upgrade, or an honest explanation.</div><div class="dans"><span class="dyes">Yes &#8212; Do it. Log it. Move on.</span><span class="dno">Not sure &#8212; use a phrase from Scenarios, then escalate if needed</span></div></div></div>
+  </div>
+  <div class="st">What you can do on your own</div>
+  <div class="cgrid">
+    <div class="card"><div class="ctype go">&#10003; Solo &#8212; no call needed</div><h3>Room Changes &amp; Upgrades</h3><ul><li>Move a guest to any room for any valid reason</li><li>Upgrade to a higher category if inventory allows</li><li>Block a room for a guest with a strong preference</li><li>Reassign due to noise, maintenance, or guest request</li></ul></div>
+    <div class="card"><div class="ctype go">&#10003; Solo &#8212; no call needed</div><h3>Guest Recovery (no money)</h3><ul><li>Offer drink tokens at the rooftop bar</li><li>Offer a breakfast voucher &#8212; one entree plus non-alcoholic beverage</li><li>Complimentary water, coffee, or amenity items at the desk</li><li>Waive a late checkout fee</li><li>Grant early check-in when a clean room is confirmed</li></ul></div>
+    <div class="card"><div class="ctype go">&#10003; Solo &#8212; no call needed</div><h3>Operational Calls</h3><ul><li>Send maintenance to any room for a guest-reported issue</li><li>Issue new or duplicate key cards (ID required every time)</li><li>Handle luggage storage requests</li><li>Respond to noise complaints between guests</li><li>Assist with local recommendations or restaurant bookings</li></ul></div>
+    <div class="card"><div class="ctype warn">&#9889; Use judgment &#8212; then log it</div><h3>Gray Area Situations</h3><ul><li>Guest is very upset &#8212; do what you can, document everything</li><li>Room not ready at check-in &#8212; upgrade or offer an amenity</li><li>Guest claims pre-existing room damage</li><li>Walk situation developing &#8212; start the process, notify management at the same time</li></ul></div>
+    <div class="card"><div class="ctype hold">&#10007; Pause &#8212; contact management</div><h3>Requires Approval</h3><ul><li>Rate adjustments or discounts after check-in</li><li>Partial or full night refunds</li><li>Expedia Collect reservation alterations of any kind</li><li>Comping an entire night's stay</li><li>Any charge removal from a folio</li></ul></div>
+    <div class="card"><div class="ctype hold">&#10007; Always escalate</div><h3>Escalate Immediately</h3><ul><li>Medical emergency &#8212; call 911 first, GM second</li><li>Law enforcement on property or requested</li><li>Guest threatening staff or another guest</li><li>Suspected trafficking or illegal activity</li><li>Media or press inquiry &#8212; never comment, refer to GM always</li></ul></div>
+  </div>
+  <div class="st">If you cannot reach management</div>
+  <div class="callout"><div style="font-size:20px;flex-shrink:0">&#128242;</div><div><h3>Escalation Protocol</h3><p>Try to reach Eli directly. If unreachable, <strong>give the guest Eli's direct contact information</strong> and assure them management will follow up personally. Log the full situation in the pass-on &#8212; what happened, what you offered, how the guest responded, and the time.</p></div></div>
+  <div class="st">Authority at a glance</div>
+  <div class="twrap"><table>
+    <thead><tr><th>Action</th><th>Authority</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Room upgrade (availability permitting)</td><td><span class="badge bgo">Solo</span></td><td>Log in pass-on</td></tr>
+      <tr><td>Room reassignment</td><td><span class="badge bgo">Solo</span></td><td>Log in pass-on</td></tr>
+      <tr><td>Late checkout waiver</td><td><span class="badge bgo">Solo</span></td><td>Log in pass-on</td></tr>
+      <tr><td>Early check-in when room is clean</td><td><span class="badge bgo">Solo</span></td><td>Confirm with housekeeping first</td></tr>
+      <tr><td>Drink tokens or breakfast voucher</td><td><span class="badge bgo">Solo</span></td><td>Log reason in pass-on</td></tr>
+      <tr><td>Rate adjustment or discount</td><td><span class="badge bhold">Call Mgmt</span></td><td>Money-related, requires approval</td></tr>
+      <tr><td>Partial or full night refund</td><td><span class="badge bhold">Call Mgmt</span></td><td>Never process without approval</td></tr>
+      <tr><td>Expedia Collect reservation changes</td><td><span class="badge bhold">Call Mgmt</span></td><td>Virtual card &#8212; do not alter</td></tr>
+      <tr><td>Walking a guest</td><td><span class="badge bwarn">Notify ASAP</span></td><td>Begin process and contact management at the same time</td></tr>
+      <tr><td>Any emergency</td><td><span class="badge bhold">911 First</span></td><td>Call 911, then GM immediately after</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- SCENARIOS -->
+<div id="p-scenarios" class="panel">
+  <div class="ph"><h2>Scenario Playbook</h2><p>Real situations with the right instincts and step-by-step responses. Click to expand.</p></div>
+  <div class="st">What to say</div>
+  <div class="pgrid">
+    <div class="pcard"><div class="psit">When a guest is frustrated</div><blockquote>&#8220;I completely understand &#8212; let me take care of that for you right now.&#8221;</blockquote></div>
+    <div class="pcard"><div class="psit">When you need to loop in management</div><blockquote>&#8220;I want to make sure this is resolved correctly for you &#8212; let me bring in my manager.&#8221;</blockquote></div>
+    <div class="pcard"><div class="psit">When a room is not ready</div><blockquote>&#8220;Your room is still being prepared &#8212; I would love to offer you something while you wait.&#8221;</blockquote></div>
+    <div class="pcard"><div class="psit">When you do not know the answer</div><blockquote>&#8220;Great question &#8212; let me find out the right answer rather than guess.&#8221;</blockquote></div>
+    <div class="pcard"><div class="psit">When leaving a voicemail</div><blockquote>&#8220;Please give us a callback &#8212; our number is 919-768-8830. Thank you for choosing The Durham.&#8221;</blockquote></div>
+    <div class="pcard"><div class="psit">When ending a difficult interaction</div><blockquote>&#8220;Thank you for letting me know &#8212; I will make sure the team is aware, and we appreciate your patience.&#8221;</blockquote></div>
+  </div>
+  <div class="st">Situations</div>
+  <div class="scen"><div class="shead" onclick="tog(this)"><h4>Room is not ready at check-in</h4><div class="smeta"><span class="stag twrn">Guest Recovery</span><span class="chev">&#9660;</span></div></div><div class="sbody"><div class="sstep"><span class="slabel">The situation</span><p>Guest arrives at or after 3pm and their room has not been cleaned yet.</p></div><div class="sstep"><span class="slabel">Your instinct</span><p>Apologize genuinely and offer something tangible. Do not over-explain or make excuses.</p></div><div class="sstep"><span class="slabel">What to do</span><p><span class="atag">Check HK status in SNT</span> <span class="atag">Offer upgrade if available</span> <span class="atag">Offer drink token</span> <span class="atag">Store luggage if needed</span><br><br>Give an honest time estimate. If more than 30 minutes past 3pm, an upgrade or drink is appropriate and entirely your call. Log it in the pass-on.</p></div></div></div>
+  <div class="scen"><div class="shead" onclick="tog(this)"><h4>Noise complaint from a guest</h4><div class="smeta"><span class="stag twrn">Guest Recovery</span><span class="chev">&#9660;</span></div></div><div class="sbody"><div class="sstep"><span class="slabel">The situation</span><p>A guest calls or comes to the desk upset about noise from a neighboring room or the hallway.</p></div><div class="sstep"><span class="slabel">Your instinct</span><p>Take it seriously. A guest who cannot sleep is a problem you can solve right now.</p></div><div class="sstep"><span class="slabel">What to do</span><p><span class="atag">Call the noisy room politely</span> <span class="atag">Offer to move the complaining guest</span> <span class="atag">Follow up with a second call if needed</span><br><br>If sleep was genuinely disrupted, a breakfast voucher or drink token is appropriate and entirely your call. No call needed. Log it.</p></div></div></div>
+  <div class="scen"><div class="shead" onclick="tog(this)"><h4>We need to walk a guest</h4><div class="smeta"><span class="stag thold">Escalate + Act</span><span class="chev">&#9660;</span></div></div><div class="sbody"><div class="sstep"><span class="slabel">The situation</span><p>The hotel is fully committed and a guest needs to be relocated to another property.</p></div><div class="sstep"><span class="slabel">Your instinct</span><p>Start the process immediately. Do not freeze waiting for instructions. Notify management at the same time, not before.</p></div><div class="sstep"><span class="slabel">What to do</span><p><span class="atag">Call 21C, Marriott, Aloft, JB Duke, Washington Duke</span> <span class="atag">Ask for walk rate and room hold</span> <span class="atag">Pick best guest to walk (1-night, lower rate, non-repeat)</span> <span class="atag">Contact management now</span><br><br>The financial side is management's call. Your job is to have a room secured before the guest arrives at the desk.</p></div></div></div>
+  <div class="scen"><div class="shead" onclick="tog(this)"><h4>Guest disputes a charge at checkout</h4><div class="smeta"><span class="stag thold">Needs management (if $)</span><span class="chev">&#9660;</span></div></div><div class="sbody"><div class="sstep"><span class="slabel">The situation</span><p>Guest reviews their folio and questions a charge &#8212; incidentals, room service, rate discrepancy, or an unknown package.</p></div><div class="sstep"><span class="slabel">Your instinct</span><p>Do not get defensive. Listen first. Most disputes are honest confusion, not bad faith.</p></div><div class="sstep"><span class="slabel">What to do</span><p><span class="atag">Pull up the folio together</span> <span class="atag">Walk through each line clearly</span> <span class="atag">Explain incidental hold and how it releases</span><br><br>If a charge is genuinely wrong, loop in management before removing anything. Tell them: &#8220;I want to make sure this is resolved correctly &#8212; let me bring in my manager.&#8221;</p></div></div></div>
+  <div class="scen"><div class="shead" onclick="tog(this)"><h4>Guest locked out or lost their key</h4><div class="smeta"><span class="stag tgo">Solo</span><span class="chev">&#9660;</span></div></div><div class="sbody"><div class="sstep"><span class="slabel">What to do</span><p><span class="atag">Verify ID against reservation &#8212; no exceptions</span> <span class="atag">New key = deactivates the old one</span> <span class="atag">Duplicate key = both old and new stay active</span><br><br>Ask whether they lost the card or just need a spare. That determines which type to issue.</p></div></div></div>
+  <div class="scen"><div class="shead" onclick="tog(this)"><h4>No-show guest &#8212; do we charge?</h4><div class="smeta"><span class="stag twrn">Follow SOP</span><span class="chev">&#9660;</span></div></div><div class="sbody"><div class="sstep"><span class="slabel">What to do</span><p><span class="atag">Check no-show report after 3am during Audit</span> <span class="atag">Charge per reservation policy</span> <span class="atag">Log in pass-on</span><br><br>If the reservation is OTA, corporate, or has unusual circumstances, flag it for management rather than guessing. Charging incorrectly is harder to undo than a short delay.</p></div></div></div>
+  <div class="scen"><div class="shead" onclick="tog(this)"><h4>Guest wants to split the bill at checkout</h4><div class="smeta"><span class="stag tgo">Solo</span><span class="chev">&#9660;</span></div></div><div class="sbody"><div class="sstep"><span class="slabel">What to do</span><p><span class="atag">Use Nights vs. Amounts split in SNT</span> <span class="atag">Confirm which card covers which portion first</span> <span class="atag">Authorize new card before removing old one</span><br><br>Take your time, confirm the split clearly before processing, and make sure both cards go through successfully.</p></div></div></div>
+</div>
+<div class="add-row" id="add-sit-row"><button class="add-btn" onclick="openSitModal()">+ Add Situation</button></div>
+
+<!-- CHECKLISTS -->
+<div id="p-checklists" class="panel">
+  <div class="ph"><h2>Shift Checklists</h2><p>Shift checklists are managed in a separate file that tracks completions by agent name and stores shift history.</p></div>
+  <div style="background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:40px 32px;text-align:center;margin-top:8px;">
+    <div style="font-size:40px;margin-bottom:16px">&#9989;</div>
+    <h3 style="font-family:-apple-system,sans-serif;font-size:20px;font-weight:600;color:#141414;margin-bottom:8px">Shift Checklist Tool</h3>
+    <p style="font-size:13px;color:#6B6B6B;margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">Log your AM, PM, or Audit shift with your name, bellman on duty, and shift notes. All submissions are saved to a running history.</p>
+    <a href="https://qrselith-bot.github.io/durham-tools/durham_shift_checklists.html" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#C9A84C;color:#fff;text-decoration:none;font-family:-apple-system,sans-serif;font-size:13px;font-weight:600;padding:12px 28px;border-radius:6px;transition:background .15s;" onmouseover="this.style.background='#9A7A2E'" onmouseout="this.style.background='#C9A84C'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Open Shift Checklists
+    </a>
+    <p style="font-size:11px;color:#C4C4C4;margin-top:16px;">Both files must be saved in the same folder for this link to work.</p>
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid #F2F2F0;">
+      <p style="font-size:12px;color:#6B6B6B;margin-bottom:12px;">Also available:</p>
+      <a href="https://qrselith-bot.github.io/durham-tools/durham_events_calendar.html" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:#9A7A2E;text-decoration:none;font-family:-apple-system,sans-serif;font-size:13px;font-weight:500;padding:10px 20px;border-radius:6px;border:1px solid #E8D28A;transition:background .15s;" onmouseover="this.style.background='#F7F0DC'" onmouseout="this.style.background='#fff'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Open Events Calendar
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKLISTS HIDDEN (kept for search index) -->
+<div id="p-checklists-hidden" style="display:none">
+  <div class="st">AM shift</div>
+  <div class="cwrap">
+    <div class="ctitle">&#9728;&#65039; AM Shift Checklist</div><span class="cmeta">Morning Shift</span>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Receive verbal pass-on and read previous shift notes</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Begin new pass-on</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Review group resume notes for the day</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Start shift report</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Count drawer</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Sign out walkie(s)</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Review all comments and alerts for today's arrivals</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Assign rooms and check for overbooking</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Review partner centrals for missed reservations and respond to message inquiries</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Print registration cards</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Add Expedia vouchers and drink tokens to registration cards</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check OOO and OOS rooms</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check email inbox and keep organized throughout shift</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Create confirmation call spreadsheet and complete calls</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Have bell team check due-outs at 12:00 &#8212; review room status screen first</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Review checked-out guest account for extraneous charges</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check out all remaining rooms at 12:00</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Follow up with management about any remaining open folios</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Remove reg. cards from the bucket</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Count drawer before end of shift</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Close cashier and log out of SNT</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Update and send pass-on</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Retrieve radios and sign shift report</span></div>
+  </div>
+  <div class="st">PM shift</div>
+  <div class="cwrap">
+    <div class="ctitle">&#127750; PM Shift Checklist</div><span class="cmeta">Evening Shift</span>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Receive verbal pass-on and read previous shift notes</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Begin new pass-on</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Review group resume notes for the day</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Start shift report and count drawer</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Sign out walkie(s)</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Complete minibars</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Review all comments and alerts for today's arrivals</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Complete any unfinished confirmation calls</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Follow up with management about remaining open folios</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Review partner centrals for missed reservations</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check room assignments and overbooking</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check OOO and OOS rooms</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check email inbox throughout shift</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Dim lobby lights at 5pm</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Count drawer before end of shift</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Close cashier and log out of SNT</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Update and send pass-on</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Retrieve radios and sign shift report</span></div>
+  </div>
+  <div class="st">Audit / overnight shift</div>
+  <div class="cwrap">
+    <div class="ctitle">&#127761; Audit Shift Checklist</div><span class="cmeta">Overnight</span>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Receive verbal pass-on and read email pass-on</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Prep coffee cart (optional)</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Count cash drawer</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Collect audit pack documents</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check Night Audit and Accounting email inboxes</span></div>
+    <div class="ctm">After 12am</div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Log into Toast and fill in F&amp;B Flash Data</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Run Arrivals report and email to wcordova, jsimpson, randerton @thedurham.com</span></div>
+    <div class="ctm">After 2am</div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Take coffee cart &#8212; set out coffee packs for 6am and 7am orders, collect room tags</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Set out stands for each coffee tag</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Prep additions for 6am and 7am coffee orders</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Pre-grind coffee for complimentary stand and pour milk into carafe</span></div>
+    <div class="ctm">After 3am</div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Forward End of Day Reports from admin@stayntouch.com to management team</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check no-show report and charge no-shows per policy</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Print Guest Balance Report and scan to management team</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Run Market Segment Statistics report (Excel) and In-House Guests report (print)</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Use Market report to complete Flash Report and STR data fields</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Hang In-House Guest report on the kitchen bulletin board</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check arrivals for requests, preferences, and packages</span></div>
+    <div class="ctm">5:30am</div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Brew coffee and run 6am orders</span></div>
+    <div class="ctm">6:30am</div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Run 7am orders and set out coffee stand</span></div>
+    <div class="ci" onclick="chk(this)"><div class="cbox"></div><span>Check and send pass-on</span></div>
+  </div>
+</div>
+</div><!-- end checklists hidden -->
+
+
+<!-- CALENDAR -->
+<div id="p-calendar" class="panel">
+  <div class="ph"><h2>Events Calendar</h2><p>The living events calendar for groups, private events, rooftop rentals, activations, and more. PIN-protected for editing.</p></div>
+  <div style="background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:40px 32px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:16px">&#128197;</div>
+    <h3 style="font-size:20px;font-weight:600;color:#141414;margin-bottom:8px">Events Calendar</h3>
+    <p style="font-size:13px;color:#6B6B6B;margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto;">View upcoming events in calendar, grid, or list view. Add and edit events with manager PIN access.</p>
+    <a href="https://qrselith-bot.github.io/durham-tools/durham_events_calendar.html" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#C9A84C;color:#fff;text-decoration:none;font-family:-apple-system,sans-serif;font-size:13px;font-weight:600;padding:12px 28px;border-radius:6px;" onmouseover="this.style.background='#9A7A2E'" onmouseout="this.style.background='#C9A84C'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Open Events Calendar
+    </a>
+    <p style="font-size:11px;color:#C4C4C4;margin-top:16px;">File must be in the same OneDrive folder as this file.</p>
+  </div>
+</div>
+
+<!-- PROCEDURES -->
+<div id="p-procedures" class="panel">
+  <div class="ph"><h2>Procedures &amp; Scripts</h2><p>Reference for common processes, guest-facing language, and system workflows.</p></div>
+  <div class="st">Guest communication</div>
+  <div class="two-col">
+    <div class="iblock"><h3>Pre-arrival call</h3><p><em>"This is [name] calling from The Durham Hotel. I am calling to confirm your stay on [date] for a [#]-night visit. Check-in is 3pm and checkout is noon. If you would like to request an early arrival I am happy to note that."</em></p><p>On voicemail add: "Please call us back at 919-768-8830. Thank you for choosing The Durham."</p><p>Confirm during the call: number of nights, room type, number of guests, special requests, and any closures that may affect the stay.</p></div>
+    <div class="iblock"><h3>Check-in</h3><ul><li>Welcome and confirm the reservation</li><li>Verify ID and take card for incidentals at $100 per night</li><li>Mention Coffee Bar and Restaurant hours</li><li>Mention Roof Bar and Patio</li><li>Mention coffee delivery service</li><li>Fitness center and YMCA passes</li><li>Mezz Lounge and business center</li><li>Issue keys &#8212; ask how many guests need cards</li></ul></div>
+  </div>
+  <div class="iblock"><h3>Check-out</h3><ul><li>Confirm guest email to send folio</li><li>Confirm phone number on file</li><li>Ask if they would like a printed copy of their folio</li><li>Offer complimentary bottles of water</li><li>Confirm the card on file is the correct one to close the bill</li></ul></div>
+  <div class="st">Third-party reservations</div>
+  <div class="two-col">
+    <div class="iblock"><h3>Hotel Collect (Expedia)</h3><p>The guest pays us directly and we pay Expedia commission after. The guest's personal credit card is on file. These reservations can be adjusted or changed with management approval.</p></div>
+    <div class="iblock"><h3>Expedia Collect</h3><p>The guest paid Expedia directly before arriving. A virtual card is on file &#8212; not the guest's personal card. Do not alter or cancel without consulting management directly. The virtual card cannot be charged differently.</p></div>
+  </div>
+  <div class="st">Cashier and payments</div>
+  <div class="two-col">
+    <div class="iblock"><h3>Cash payment &#8212; room and tax</h3><ul><li>Locate the yellow Cashier's Deposit Report slip</li><li>Take the amount and make change as needed</li><li>Fill out all information on the slip</li><li>Place in safe inside the cash drawer</li><li>Note: SNT shows as cash but the amount is not applied until paid in the Bill and Charges screen</li></ul></div>
+    <div class="iblock"><h3>Cash incidentals</h3><ul><li>Take $100 per night</li><li>Place in a Cashier's Deposit Report slip marked "incidentals"</li><li>Note the cash payment in the pass-on</li><li>Room must be inspected by housekeeping before returning the amount</li><li>This is not a charge and will not appear on the folio</li></ul></div>
+  </div>
+  <div class="st">Packages</div>
+  <div class="two-col">
+    <div class="iblock"><h3>Breakfast Package &#8212; $10 per night per person</h3><ul><li>One voucher per night &#8212; one entree plus one non-alcoholic beverage at breakfast</li><li>Vouchers have an expiration date and are not valid after checkout</li><li>Not redeemable for cash under any circumstance</li><li>Guests may add at check-in for $10 per person</li></ul></div>
+    <div class="iblock"><h3>Night Out Package &#8212; $15 per night</h3><ul><li>Guest receives a $25 credit at all F&amp;B outlets including Coffee Bar, Rooftop, and Room Service</li><li>Unused credits are forfeited at checkout with no reimbursement</li><li>Credit applies across all outlets, not rooftop only</li></ul></div>
+  </div>
+  <div class="st">Room service</div>
+  <div class="iblock"><h3>Hours and process</h3><p><strong>Breakfast:</strong> 7:30am to 11:00am &nbsp;&nbsp;&nbsp; <strong>Afternoon and evening:</strong> 11:00am to 9:00pm</p><p>Fill out the room service ticket in the front desk binder (separated by dividers) with guest info and items ordered. For special requests, confirm with Restaurant or Rooftop before confirming with the guest. Additional forms are available as an Excel file on the front desk terminals.</p></div>
+</div>
+
+<!-- ROOMS -->
+<div id="p-rooms" class="panel">
+  <div class="ph"><h2>Room Types</h2><p>Reference for room categories, sizes, and key details. Useful when assigning rooms or discussing upgrades with guests.</p></div>
+  <div class="st">Room reference</div>
+  <p style="font-size:12px;color:#6B6B6B;margin-bottom:14px;">53 total guest rooms across floors 2&#8211;6. Use the upgrade path below when balancing inventory.</p>
+  <div class="rgrid">
+
+    <div class="rcard">
+      <div class="rcode">PENT</div>
+      <div class="rname">Penthouse Suite</div>
+      <div class="rdetail">
+        <strong>Size:</strong> 1,050 sq ft<br>
+        <strong>Sleeps:</strong> 2<br>
+        <strong>View:</strong> City + private terrace<br>
+        <strong>Floor:</strong> 6th (only one on property)<br>
+        <strong>Notes:</strong> Private rooftop terrace, spacious living room, butler bar, double vanity, king bedroom. Can host gatherings up to 20. The Durham&#8217;s most desired suite.
+      </div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcode">SKS</div>
+      <div class="rname">Superior King Suite</div>
+      <div class="rdetail">
+        <strong>Size:</strong> 475 sq ft<br>
+        <strong>Sleeps:</strong> 2<br>
+        <strong>View:</strong> City<br>
+        <strong>Floor:</strong> One per floor (3rd, 4th, 5th)<br>
+        <strong>Notes:</strong> Floor-to-ceiling windows, private bedroom, separate living room. Freshly ground Counter Culture coffee and Burt&#8217;s Bees amenity gift included.
+      </div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcode">SDD</div>
+      <div class="rname">Superior Double</div>
+      <div class="rdetail">
+        <strong>Size:</strong> 375 sq ft<br>
+        <strong>Sleeps:</strong> 2&#8211;4<br>
+        <strong>View:</strong> City<br>
+        <strong>Floor:</strong> One per floor (3rd, 4th, 5th)<br>
+        <strong>Notes:</strong> Larger than standard rooms. Some have small sitting areas with chairs and coffee table. All have floor-to-ceiling windows.
+      </div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcode">SK</div>
+      <div class="rname">Superior King</div>
+      <div class="rdetail">
+        <strong>Size:</strong> 360 sq ft<br>
+        <strong>Sleeps:</strong> 2<br>
+        <strong>View:</strong> City<br>
+        <strong>Floor:</strong> 3rd, 4th, 5th<br>
+        <strong>Notes:</strong> Larger than standard rooms. Some have small sitting areas. All have floor-to-ceiling windows. Snack bar with local offerings included.
+      </div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcode">DK</div>
+      <div class="rname">Deluxe King</div>
+      <div class="rdetail">
+        <strong>Size:</strong> 360 sq ft<br>
+        <strong>Sleeps:</strong> 2<br>
+        <strong>View:</strong> City<br>
+        <strong>Floor:</strong> 2nd, 3rd, 4th, 5th<br>
+        <strong>Notes:</strong> Standard king room with large floor-to-ceiling windows. Bar rate room. Located on East side above Queenies &#8212; not usually considered a quiet room. Some connect to DDD.
+      </div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcode">DDD</div>
+      <div class="rname">Deluxe Double Double</div>
+      <div class="rdetail">
+        <strong>Size:</strong> 325 sq ft<br>
+        <strong>Sleeps:</strong> 4<br>
+        <strong>View:</strong> City<br>
+        <strong>Floor:</strong> 3rd, 4th, 5th<br>
+        <strong>Notes:</strong> Two full-size double wood platform beds. Fillaree bath products and terrycloth robes. East side above Queenies &#8212; not usually a quiet room. Can connect to DK.
+      </div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcode">DKO</div>
+      <div class="rname">Deluxe King Obstructed</div>
+      <div class="rdetail">
+        <strong>Size:</strong> 325 sq ft<br>
+        <strong>Sleeps:</strong> 2<br>
+        <strong>View:</strong> Obstructed<br>
+        <strong>Floor:</strong> 3rd only (3 rooms total)<br>
+        <strong>Notes:</strong> Most economic option. Slightly smaller than standard DK. Often overbooked &#8212; only 3 on property. East side above Queenies. Can connect to DDDO. Upgrade path: DKO &#8594; DK.
+      </div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcode">DDDO</div>
+      <div class="rname">Deluxe Double Obstructed</div>
+      <div class="rdetail">
+        <strong>Size:</strong> 325 sq ft<br>
+        <strong>Sleeps:</strong> 4<br>
+        <strong>View:</strong> Obstructed<br>
+        <strong>Floor:</strong> 2nd, 3rd<br>
+        <strong>Notes:</strong> Two full-size double beds. Views obstructed by adjacent building. East side above Queenies. Can connect to DKO.
+      </div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcode">ADA</div>
+      <div class="rname">Accessible Rooms</div>
+      <div class="rdetail">
+        <strong>Size:</strong> 325&#8211;375 sq ft<br>
+        <strong>Sleeps:</strong> 2&#8211;4<br>
+        <strong>View:</strong> City<br>
+        <strong>Types:</strong> DKA, DDDA, SKA<br>
+        <strong>Notes:</strong> Signature mid-century design plus accessible features &#8212; bathroom grab bars, elevated sinks, and roll-in showers. Only upgrade to ADA rooms if absolutely necessary.
+      </div>
+    </div>
+
+  </div>
+  <div class="st">Upgrade notes</div>
+  <div class="callout"><div style="font-size:20px;flex-shrink:0">&#11014;&#65039;</div><div><h3>Offering an upgrade</h3><p>Always check SNT availability first. Upgrades go to a cleaner, larger, or higher-floor room. <strong>You do not need management approval to upgrade a guest</strong> as long as the room is available and clean. Log it in the pass-on with a brief note on why.</p><p style="margin-top:8px"><strong>Standard upgrade path when balancing inventory:</strong> DKO &#8594; DK &#8594; SK &#8594; SDD or SKS. Never switch kings to doubles or doubles to kings. Upgrading to ADA rooms is a last resort only.</p></div></div>
+</div>
+
+<!-- CONTACTS -->
+<div id="p-contacts" class="panel">
+  <div class="ph"><h2>Contacts</h2><p>Who to call and when. For emergencies: 911 first, GM second, always.</p></div>
+  <div class="st">Emergencies</div>
+  <div class="ebox">
+    <h3>&#128680; Emergency Numbers</h3>
+    <div class="erow"><span class="elab">Any emergency &#8212; ambulance, police, fire</span><span class="enum">911</span></div>
+    <div class="erow"><span class="elab">Police non-emergency direct line</span><span class="enum">919-560-4600</span></div>
+    <div class="erow"><span class="elab">Police department</span><span class="enum">919-560-4427</span></div>
+    <div class="erow"><span class="elab">Fire department station</span><span class="enum">919-560-4245</span></div>
+    <div class="erow"><span class="elab">Poison control</span><span class="enum">800-222-1222</span></div>
+    <div class="erow"><span class="elab">Animal removal services</span><span class="enum">919-560-0630</span></div>
+  </div>
+  <div class="st">Escalation protocol</div>
+  <div class="callout"><div style="font-size:20px;flex-shrink:0">&#128203;</div><div><h3>If you cannot reach management</h3><p>Try to reach Eli directly. If unreachable, <strong>give the guest Eli's direct contact information</strong> and assure them management will follow up personally. Log everything in the pass-on &#8212; the situation, what you offered, how the guest responded, and the exact time.</p></div></div>
+  <div class="st">Hotel extensions</div>
+  <div class="kgrid">
+    <div class="kcard"><div class="krole">Front Desk</div><div class="kname">Terminal 1</div><div class="kdet"><strong>Ext. 101</strong></div></div>
+    <div class="kcard"><div class="krole">Front Desk</div><div class="kname">Terminal 2</div><div class="kdet"><strong>Ext. 110</strong></div></div>
+    <div class="kcard"><div class="krole">Back Office</div><div class="kname">Line 1 / Line 2</div><div class="kdet"><strong>Ext. 138 / 103</strong></div></div>
+    <div class="kcard"><div class="krole">General Manager</div><div class="kname">Emily Strickland</div><div class="kdet"><strong>Ext. 107</strong></div></div>
+    <div class="kcard"><div class="krole">Management</div><div class="kname">Ariel Swan</div><div class="kdet"><strong>Ext. 105</strong></div></div>
+    <div class="kcard"><div class="krole">Management</div><div class="kname">Melvin</div><div class="kdet"><strong>Ext. 109</strong></div></div>
+    <div class="kcard"><div class="krole">Management</div><div class="kname">Rebecca Anderton</div><div class="kdet"><strong>Ext. 108</strong></div></div>
+    <div class="kcard"><div class="krole">Management</div><div class="kname">McKenzie Ramsey</div><div class="kdet"><strong>Ext. 139</strong></div></div>
+    <div class="kcard"><div class="krole">Restaurant Host</div><div class="kname">Host Stand</div><div class="kdet"><strong>Ext. 131</strong></div></div>
+    <div class="kcard"><div class="krole">Restaurant Manager</div><div class="kname">Manager's Office</div><div class="kdet"><strong>Ext. 102</strong></div></div>
+    <div class="kcard"><div class="krole">Guest Rooms</div><div class="kname">Any Room</div><div class="kdet"><strong>7 + Room Number</strong></div></div>
+  </div>
+  <div class="add-row" id="add-con-row"><button class="add-btn" onclick="openConModal()">+ Add Contact</button></div>
+  <div class="st">Vendors and systems</div>
+  <div class="kgrid">
+    <div class="kcard"><div class="krole">Guest Elevator (South)</div><div class="kname">Thyssen</div><div class="kdet"><strong>919-851-8557</strong><br>Person stuck: call 911 first</div></div>
+    <div class="kcard"><div class="krole">Service Elevator (North)</div><div class="kname">Schindler</div><div class="kdet"><strong>800-225-3123</strong><br>Person stuck: call 911 first</div></div>
+    <div class="kcard"><div class="krole">Credit Card Processing</div><div class="kname">Shift4</div><div class="kdet"><strong>1-800-828-6650</strong></div></div>
+    <div class="kcard"><div class="krole">Property Management</div><div class="kname">StayNTouch</div><div class="kdet"><strong>301-563-9473</strong><br><strong>301-857-1868</strong></div></div>
+    <div class="kcard"><div class="krole">OTA Partner Support</div><div class="kname">Expedia</div><div class="kdet"><strong>800-319-4834</strong><br><strong>866-310-5768</strong></div></div>
+    <div class="kcard"><div class="krole">Human Resources</div><div class="kname">HR Team</div><div class="kdet"><strong>humanresources@thedurham.com</strong></div></div>
+  </div>
+</div>
+
+</div><!-- end #body -->
+
+<script>
+var PANELS = ['authority','scenarios','checklists','calendar','procedures','rooms','contacts'];
+var current = 'authority';
+
+function switchTab(id, btn) {
+  PANELS.forEach(function(p) {
+    document.getElementById('p-'+p).classList.toggle('active', p === id);
+  });
+  document.getElementById('p-search').classList.remove('active');
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  current = id;
+  document.getElementById('search').value = '';
+  window.scrollTo(0, 0);
+}
+
+function tog(header) {
+  var body = header.nextElementSibling;
+  var chev = header.querySelector('.chev');
+  var isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chev) chev.classList.toggle('open', !isOpen);
+}
+
+function chk(el) { el.classList.toggle('done'); }
+
+var IDX = [
+  {s:'Authority',t:'Room upgrade and room changes',k:'upgrade move room reassign',tab:'authority'},
+  {s:'Authority',t:'Drink tokens and breakfast vouchers',k:'drink token rooftop breakfast voucher comp complimentary',tab:'authority'},
+  {s:'Authority',t:'Late checkout waiver',k:'late checkout waiver fee extension',tab:'authority'},
+  {s:'Authority',t:'Requires management approval',k:'refund rate discount money approval OTA Expedia',tab:'authority'},
+  {s:'Authority',t:'Quick decision guide',k:'decision guide emergency money danger',tab:'authority'},
+  {s:'Scenarios',t:'Room not ready at check-in',k:'room not ready checkin late housekeeping upgrade delay',tab:'scenarios'},
+  {s:'Scenarios',t:'Noise complaint',k:'noise complaint neighbor loud quiet sleep disrupted',tab:'scenarios'},
+  {s:'Scenarios',t:'Walking a guest — overbooking',k:'walk guest overbook relocation 21C Marriott Aloft JB Duke',tab:'scenarios'},
+  {s:'Scenarios',t:'Folio dispute at checkout',k:'charge dispute bill folio checkout incidentals wrong',tab:'scenarios'},
+  {s:'Scenarios',t:'Lost key or locked out',k:'lost key locked out duplicate new key ID verify',tab:'scenarios'},
+  {s:'Scenarios',t:'No-show charging policy',k:'no show charge reservation cancel',tab:'scenarios'},
+  {s:'Scenarios',t:'Split bill at checkout',k:'split bill two cards switch card checkout payment',tab:'scenarios'},
+  {s:'Scenarios',t:'What to say to guests',k:'phrases script frustrated sorry apology voicemail difficult',tab:'scenarios'},
+  {s:'Checklists',t:'AM Shift Checklist',k:'am morning shift drawer walkie registration confirmations checkouts',tab:'checklists'},
+  {s:'Checklists',t:'PM Shift Checklist',k:'pm evening shift minibars dim lights pass on',tab:'checklists'},
+  {s:'Checklists',t:'Audit overnight checklist',k:'night audit overnight coffee cart toast flash report STR no-show',tab:'checklists'},
+  {s:'Procedures',t:'Pre-arrival call script',k:'pre arrival call confirm voicemail phone script',tab:'procedures'},
+  {s:'Procedures',t:'Check-in script and amenities',k:'check in script amenities coffee bar rooftop fitness YMCA mezz',tab:'procedures'},
+  {s:'Procedures',t:'Check-out script',k:'checkout script folio email water printed copy',tab:'procedures'},
+  {s:'Procedures',t:'Expedia Collect vs Hotel Collect',k:'expedia collect hotel collect OTA third party virtual card alter',tab:'procedures'},
+  {s:'Procedures',t:'Cash payments and incidentals',k:'cash payment incidental cashier deposit slip safe drawer',tab:'procedures'},
+  {s:'Procedures',t:'Breakfast and Night Out packages',k:'breakfast package voucher night out credit F&B',tab:'procedures'},
+  {s:'Procedures',t:'Room service hours and process',k:'room service hours 7:30 11am 9pm menu binder ticket',tab:'procedures'},
+  {s:'Rooms',t:'Room types and upgrade path',k:'room type SKS suite king size floor view upgrade category',tab:'rooms'},
+  {s:'Contacts',t:'Emergency numbers — 911, police, fire',k:'emergency 911 police fire poison control animal removal',tab:'contacts'},
+  {s:'Contacts',t:'Hotel phone extensions',k:'extension phone front desk GM Ariel Melvin Rebecca McKenzie Emily restaurant',tab:'contacts'},
+  {s:'Contacts',t:'Vendor support numbers',k:'stayntouch shift4 expedia support elevator thyssen schindler HR',tab:'contacts'}
+];
+
+function doSearch(q) {
+  q = (q || '').trim().toLowerCase();
+  var sr = document.getElementById('p-search');
+  if (!q) {
+    sr.classList.remove('active');
+    document.getElementById('p-'+current).classList.add('active');
+    document.querySelectorAll('.tab').forEach(function(t) {
+      t.classList.toggle('active', t.getAttribute('onclick') && t.getAttribute('onclick').indexOf("'"+current+"'") >= 0);
+    });
+    return;
+  }
+  PANELS.forEach(function(p) { document.getElementById('p-'+p).classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  sr.classList.add('active');
+  var hits = IDX.filter(function(item) {
+    return item.t.toLowerCase().indexOf(q) >= 0 || item.k.toLowerCase().indexOf(q) >= 0 || item.s.toLowerCase().indexOf(q) >= 0;
+  });
+  document.getElementById('sr-title').textContent = hits.length + ' result' + (hits.length !== 1 ? 's' : '') + ' for "' + q + '"';
+  if (!hits.length) {
+    document.getElementById('sr-list').innerHTML = '<div class="no-results">No results for "' + q + '" — try a different keyword.</div>';
+    return;
+  }
+  document.getElementById('sr-list').innerHTML = hits.map(function(h) {
+    var hl = h.t.replace(new RegExp('('+q+')', 'gi'), '<mark>$1</mark>');
+    return '<div class="sr-item" onclick="goTo(\''+h.tab+'\')">'
+      + '<div class="sr-section">'+h.s+'</div>'
+      + '<div class="sr-title">'+hl+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+function goTo(tabId) {
+  document.getElementById('search').value = '';
+  document.getElementById('p-search').classList.remove('active');
+  PANELS.forEach(function(p) { document.getElementById('p-'+p).classList.toggle('active', p === tabId); });
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.toggle('active', t.getAttribute('onclick') && t.getAttribute('onclick').indexOf("'"+tabId+"'") >= 0);
+  });
+  current = tabId;
+  window.scrollTo(0, 0);
+}
+
+// Shift badge
+(function() {
+  var h = new Date().getHours();
+  var el = document.getElementById('shift-badge');
+  if (h >= 7 && h < 15) el.textContent = 'AM Shift';
+  else if (h >= 15 && h < 23) el.textContent = 'PM Shift';
+  else el.textContent = 'Audit Shift';
+})();
+
+
+// ── EDIT MODE ──
+var editMode = false;
+
+var EDIT_SELECTORS = [
+  '.card h3','.card li','.iblock h3','.iblock p','.iblock li',
+  '.callout h3','.callout p','.dtree h3','.dq','.dsub',
+  '.gold-block h3','.gold-block p',
+  '.twrap td','.ph h2','.ph p','.rname','.rdetail',
+  '.pcard blockquote','.psit','.ctitle','.ci span',
+  '.shead h4','.sstep p','.slabel',
+  '.kname','.krole','.kdet','.elab','.enum',
+  '#notice-text'
+];
+
+function toggleEdit() {
+  editMode = !editMode;
+  document.body.classList.toggle('editing', editMode);
+  var btn = document.getElementById('edit-btn');
+  btn.classList.toggle('on', editMode);
+  btn.innerHTML = editMode ? '&#10003;&nbsp;Done' : '&#9998;&nbsp;Edit';
+  if (editMode) enableEditing(); else disableEditing();
+}
+
+function enableEditing() {
+  EDIT_SELECTORS.forEach(function(sel) {
+    document.querySelectorAll(sel).forEach(function(el) {
+      el.contentEditable = 'true';
+      el.spellcheck = true;
+    });
+  });
+  // Add delete buttons to cards, scenarios, contact cards
+  var dels = '.card, .scen, .kcard';
+  document.querySelectorAll(dels).forEach(function(el) {
+    if (!el.querySelector('.del-x')) {
+      el.classList.add('has-del');
+      var b = document.createElement('button');
+      b.className = 'del-x';
+      b.innerHTML = '&times;';
+      b.title = 'Remove';
+      b.onclick = function(e) { e.stopPropagation(); el.remove(); };
+      el.appendChild(b);
+    }
+  });
+}
+
+function disableEditing() {
+  document.querySelectorAll('[contenteditable]').forEach(function(el) {
+    el.contentEditable = 'false';
+    el.spellcheck = false;
+  });
+  document.querySelectorAll('.del-x').forEach(function(b) { b.remove(); });
+  document.querySelectorAll('.has-del').forEach(function(el) { el.classList.remove('has-del'); });
+}
+
+// ── SITUATION MODAL ──
+function openSitModal() {
+  ['m-title','m-sit','m-inst','m-tags','m-wtd'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('sit-modal-bg').classList.add('open');
+  document.getElementById('m-title').focus();
+}
+
+function closeSitModal() {
+  document.getElementById('sit-modal-bg').classList.remove('open');
+}
+
+document.getElementById('sit-modal-bg').addEventListener('click', function(e) {
+  if (e.target === this) closeSitModal();
+});
+
+function saveSituation() {
+  var title = document.getElementById('m-title').value.trim();
+  if (!title) { document.getElementById('m-title').focus(); return; }
+  var tag = document.getElementById('m-tag').value;
+  var tagLabel = document.getElementById('m-tag').options[document.getElementById('m-tag').selectedIndex].text;
+  var sit = document.getElementById('m-sit').value.trim();
+  var inst = document.getElementById('m-inst').value.trim();
+  var tagsRaw = document.getElementById('m-tags').value.trim();
+  var wtd = document.getElementById('m-wtd').value.trim();
+
+  var atags = tagsRaw ? tagsRaw.split(',').map(function(t) {
+    return '<span class="atag">' + t.trim() + '</span>';
+  }).join(' ') : '';
+
+  var bodyContent = '';
+  if (sit) bodyContent += '<div class="sstep"><span class="slabel">The situation</span><p>' + sit + '</p></div>';
+  if (inst) bodyContent += '<div class="sstep"><span class="slabel">Your instinct</span><p>' + inst + '</p></div>';
+  if (atags || wtd) {
+    bodyContent += '<div class="sstep"><span class="slabel">What to do</span><p>' + atags + (atags && wtd ? '<br><br>' : '') + wtd + '</p></div>';
+  }
+
+  var div = document.createElement('div');
+  div.className = 'scen';
+  div.innerHTML = '<div class="shead" onclick="tog(this)">'
+    + '<h4>' + title + '</h4>'
+    + '<div class="smeta"><span class="stag ' + tag + '">' + tagLabel + '</span><span class="chev">&#9660;</span></div>'
+    + '</div>'
+    + '<div class="sbody">' + bodyContent + '</div>';
+
+  // Add delete button since we're in edit mode
+  div.classList.add('has-del');
+  var b = document.createElement('button');
+  b.className = 'del-x';
+  b.innerHTML = '&times;';
+  b.onclick = function(e) { e.stopPropagation(); div.remove(); };
+  div.appendChild(b);
+
+  // Insert before the add-row
+  var addRow = document.getElementById('add-sit-row');
+  addRow.parentNode.insertBefore(div, addRow);
+  closeSitModal();
+}
+
+// ── CONTACT MODAL ──
+function openConModal() {
+  ['c-role','c-name','c-det','c-notes'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('con-modal-bg').classList.add('open');
+  document.getElementById('c-role').focus();
+}
+
+function closeConModal() {
+  document.getElementById('con-modal-bg').classList.remove('open');
+}
+
+document.getElementById('con-modal-bg').addEventListener('click', function(e) {
+  if (e.target === this) closeConModal();
+});
+
+function saveContact() {
+  var role = document.getElementById('c-role').value.trim();
+  var name = document.getElementById('c-name').value.trim();
+  var det = document.getElementById('c-det').value.trim();
+  var notes = document.getElementById('c-notes').value.trim();
+  if (!role && !name && !det) { document.getElementById('c-role').focus(); return; }
+
+  var detHtml = det ? '<strong>' + det + '</strong>' : '';
+  if (notes) detHtml += (detHtml ? '<br>' : '') + notes;
+
+  var div = document.createElement('div');
+  div.className = 'kcard has-del';
+  div.innerHTML = '<div class="krole">' + (role || 'Contact') + '</div>'
+    + '<div class="kname">' + (name || '') + '</div>'
+    + '<div class="kdet">' + detHtml + '</div>';
+
+  var b = document.createElement('button');
+  b.className = 'del-x';
+  b.innerHTML = '&times;';
+  b.onclick = function(e) { e.stopPropagation(); div.remove(); };
+  div.appendChild(b);
+
+  // Insert before the add-row
+  var addRow = document.getElementById('add-con-row');
+  addRow.parentNode.insertBefore(div, addRow);
+
+  // Make new card editable if still in edit mode
+  if (editMode) {
+    div.querySelectorAll('.krole,.kname,.kdet').forEach(function(el) {
+      el.contentEditable = 'true';
+      el.spellcheck = true;
+    });
+  }
+
+  closeConModal();
+}
+
+// Close modals on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeSitModal(); closeConModal(); }
+});
+
+// Notices editable on click
+document.getElementById('notice-text').addEventListener('click', function() {
+  this.contentEditable = 'true';
+  this.focus();
+});
+document.getElementById('notice-text').addEventListener('blur', function() {
+  this.contentEditable = 'false';
+});
+
+// Download — saves THIS file itself
+function doDownload() {
+  var src = '<!DOCTYPE html>' + document.documentElement.outerHTML;
+  var blob = new Blob([src], {type: 'text/html'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'durham_knowledge_base.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  var t = document.getElementById('dl-toast');
+  t.textContent = '&#10003; Saved!';
+  t.style.opacity = '1';
+  setTimeout(function() { t.style.opacity = '0'; t.textContent = ''; }, 2000);
+}
+</script>
+
+<!-- SITUATION MODAL -->
+<div id="sit-modal-bg">
+  <div id="sit-modal">
+    <h3>Add New Situation</h3>
+    <div class="mrow"><label>Title</label><input type="text" id="m-title" placeholder="e.g. Guest requests late checkout"></div>
+    <div class="mrow"><label>Category Tag</label>
+      <select id="m-tag">
+        <option value="twrn">Guest Recovery</option>
+        <option value="thold">Escalate + Act</option>
+        <option value="tgo">Solo</option>
+        <option value="twrn">Follow SOP</option>
+      </select>
+    </div>
+    <div class="mrow"><label>The Situation</label><textarea id="m-sit" placeholder="Describe what is happening..."></textarea></div>
+    <div class="mrow"><label>Your Instinct</label><textarea id="m-inst" placeholder="How should staff approach this?"></textarea></div>
+    <div class="mrow"><label>Action Tags (comma separated)</label><input type="text" id="m-tags" placeholder="e.g. Check SNT, Call management, Log in pass-on"></div>
+    <div class="mrow"><label>What To Do (details)</label><textarea id="m-wtd" placeholder="Step by step guidance and context..."></textarea></div>
+    <div class="modal-btns">
+      <button class="mbtn-cancel" onclick="closeSitModal()">Cancel</button>
+      <button class="mbtn-primary" onclick="saveSituation()">Add Situation</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT MODAL -->
+<div id="con-modal-bg">
+  <div id="con-modal">
+    <h3>Add New Contact</h3>
+    <div class="mrow"><label>Role / Department</label><input type="text" id="c-role" placeholder="e.g. Head of Housekeeping"></div>
+    <div class="mrow"><label>Name</label><input type="text" id="c-name" placeholder="e.g. Maria Santos"></div>
+    <div class="mrow"><label>Phone / Extension / Email</label><input type="text" id="c-det" placeholder="e.g. Ext. 115 or 919-555-0100"></div>
+    <div class="mrow"><label>Notes (optional)</label><input type="text" id="c-notes" placeholder="e.g. Available 7am to 3pm"></div>
+    <div class="modal-btns">
+      <button class="mbtn-cancel" onclick="closeConModal()">Cancel</button>
+      <button class="mbtn-primary" onclick="saveContact()">Add Contact</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
