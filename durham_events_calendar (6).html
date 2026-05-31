@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Durham Hotel — Events Calendar</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#FAFAF8;color:#1A1A1A;font-size:14px;line-height:1.6;min-height:100vh;}
+#header{background:#fff;border-bottom:2px solid #C9A84C;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+#header-inner{display:flex;align-items:center;padding:10px 24px;gap:14px;flex-wrap:wrap;}
+#logo{width:36px;height:36px;background:#C9A84C;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;border-radius:2px;flex-shrink:0;}
+#logo-text{font-size:15px;font-weight:600;color:#141414;line-height:1.2;}
+#logo-text span{display:block;font-size:9px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;color:#6B6B6B;margin-top:2px;}
+#header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+#today-btn{background:#F7F0DC;color:#9A7A2E;border:1px solid #E8D28A;font-family:inherit;font-size:11px;font-weight:600;padding:5px 12px;border-radius:4px;cursor:pointer;}
+#today-btn:hover{background:#C9A84C;color:#fff;border-color:#C9A84C;}
+#lock-btn{background:#fff;border:1px solid #E8E4DA;color:#6B6B6B;font-family:inherit;font-size:11px;font-weight:500;padding:5px 12px;border-radius:4px;cursor:pointer;}
+#lock-btn:hover{border-color:#C9A84C;color:#9A7A2E;}
+#lock-btn.unlocked{background:#EAF4EE;color:#2D6A4F;border-color:#B7DFC9;}
+#dl-btn{background:#C9A84C;color:#fff;border:none;font-family:inherit;font-size:11px;font-weight:600;padding:6px 14px;border-radius:4px;cursor:pointer;}
+#dl-btn:hover{background:#9A7A2E;}
+#viewbar{background:#fff;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;padding:0 24px;}
+.vtab{background:none;border:none;border-bottom:2px solid transparent;color:#6B6B6B;font-family:inherit;font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;padding:10px 16px;cursor:pointer;white-space:nowrap;margin-bottom:-1px;transition:all .15s;}
+.vtab:hover{color:#1A1A1A;}
+.vtab.active{color:#9A7A2E;border-bottom-color:#C9A84C;font-weight:600;}
+#month-nav{margin-left:auto;display:flex;align-items:center;gap:10px;}
+#month-label{font-size:15px;font-weight:600;color:#141414;min-width:160px;text-align:center;}
+.nav-btn{background:#fff;border:1px solid #E8E4DA;color:#6B6B6B;font-family:inherit;font-size:16px;width:30px;height:30px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.nav-btn:hover{border-color:#C9A84C;color:#9A7A2E;}
+#body{max-width:1100px;margin:0 auto;padding:24px 24px 80px;}
+.view{display:none;}
+.view.active{display:block;}
+:root{
+  --c-group:#2563EB; --c-group-bg:#EFF6FF; --c-group-bd:#BFDBFE;
+  --c-private:#9333EA; --c-private-bg:#F5F3FF; --c-private-bd:#DDD6FE;
+  --c-rooftop:#EA580C; --c-rooftop-bg:#FFF7ED; --c-rooftop-bd:#FED7AA;
+  --c-restaurant:#0891B2; --c-restaurant-bg:#ECFEFF; --c-restaurant-bd:#A5F3FC;
+  --c-maintenance:#DC2626; --c-maintenance-bg:#FEF2F2; --c-maintenance-bd:#FECACA;
+  --c-staff:#6B6B6B; --c-staff-bg:#F2F2F0; --c-staff-bd:#E8E4DA;
+  --c-semiprivate:#D97706; --c-semiprivate-bg:#FFFBEB; --c-semiprivate-bd:#FDE68A;
+  --c-coffee:#059669; --c-coffee-bg:#ECFDF5; --c-coffee-bd:#A7F3D0;
+}
+#legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#6B6B6B;}
+.evt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;}
+.evt-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:2px 8px;border-radius:3px;}
+.type-group{color:var(--c-group);background:var(--c-group-bg);border:1px solid var(--c-group-bd);}
+.type-private{color:var(--c-private);background:var(--c-private-bg);border:1px solid var(--c-private-bd);}
+.type-rooftop{color:var(--c-rooftop);background:var(--c-rooftop-bg);border:1px solid var(--c-rooftop-bd);}
+.type-restaurant{color:var(--c-restaurant);background:var(--c-restaurant-bg);border:1px solid var(--c-restaurant-bd);}
+.type-maintenance{color:var(--c-maintenance);background:var(--c-maintenance-bg);border:1px solid var(--c-maintenance-bd);}
+.type-staff{color:var(--c-staff);background:var(--c-staff-bg);border:1px solid var(--c-staff-bd);}
+.type-semiprivate{color:var(--c-semiprivate);background:var(--c-semiprivate-bg);border:1px solid var(--c-semiprivate-bd);}
+.type-coffee{color:var(--c-coffee);background:var(--c-coffee-bg);border:1px solid var(--c-coffee-bd);}
+#cal-grid{background:#fff;border:1px solid #E8E4DA;border-radius:8px;overflow:hidden;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);background:#FAFAF8;border-bottom:1px solid #E8E4DA;}
+.cal-wday{padding:8px;text-align:center;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9A7A2E;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-cell{min-height:110px;border-right:1px solid #F2F2F0;border-bottom:1px solid #F2F2F0;padding:6px;position:relative;}
+.cal-cell:nth-child(7n){border-right:none;}
+.cal-cell.other-month{background:#FAFAF8;}
+.cal-cell.today{background:#F7F0DC;}
+.cal-cell.today .cal-day-num{background:#C9A84C;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;}
+.cal-day-num{font-size:12px;font-weight:600;color:#6B6B6B;margin-bottom:4px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;}
+.cal-cell.other-month .cal-day-num{color:#C4C4C4;}
+.cal-evt{font-size:10px;font-weight:500;padding:2px 5px;border-radius:2px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.cal-more{font-size:10px;color:#9A7A2E;font-weight:600;cursor:pointer;padding:1px 4px;}
+.cal-add-btn{position:absolute;bottom:4px;right:4px;width:18px;height:18px;background:#C9A84C;color:#fff;border:none;border-radius:50%;font-size:14px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;padding:0;}
+.cal-cell:hover .cal-add-btn{opacity:1;}
+body.unlocked .cal-add-btn{display:flex;}
+#grid-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #E8E4DA;border-radius:8px;overflow:hidden;}
+#grid-table th{background:#FAFAF8;font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:#6B6B6B;padding:10px 14px;text-align:left;border-bottom:1px solid #E8E4DA;white-space:nowrap;}
+#grid-table td{padding:10px 14px;font-size:13px;border-bottom:1px solid #F2F2F0;color:#3D3D3D;vertical-align:middle;}
+#grid-table tr:last-child td{border-bottom:none;}
+#grid-table tr:hover td{background:rgba(201,168,76,0.03);cursor:pointer;}
+.grid-today-row td{background:#F7F0DC !important;}
+.list-month-group{margin-bottom:24px;}
+.list-month-label{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#9A7A2E;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.list-month-label::after{content:"";flex:1;height:1px;background:#E8E4DA;}
+.list-evt{background:#fff;border:1px solid #E8E4DA;border-radius:6px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:14px;cursor:pointer;}
+.list-evt:hover{box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+.list-date-col{text-align:center;flex-shrink:0;width:48px;}
+.list-day-num{font-size:22px;font-weight:700;color:#141414;line-height:1;}
+.list-day-name{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#9A7A2E;}
+.list-divider{width:1px;background:#E8E4DA;align-self:stretch;flex-shrink:0;}
+.list-content{flex:1;}
+.list-evt-title{font-size:14px;font-weight:600;color:#141414;margin-bottom:4px;}
+.list-evt-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:#6B6B6B;}
+.list-evt-notes{font-size:12px;color:#6B6B6B;margin-top:6px;line-height:1.5;}
+.list-actions{display:none;flex-direction:column;gap:4px;flex-shrink:0;}
+body.unlocked .list-actions{display:flex;}
+.act-btn{background:#fff;border:1px solid #E8E4DA;color:#6B6B6B;font-family:inherit;font-size:11px;padding:3px 9px;border-radius:3px;cursor:pointer;white-space:nowrap;}
+.act-btn:hover{border-color:#C9A84C;color:#9A7A2E;}
+.act-btn.del{border-color:#E8C0C0;color:#8B2E2E;}
+.act-btn.del:hover{background:#FAEAEA;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #E8E4DA;background:#fff;transition:all .15s;display:inline-block;}
+.pin-dot.filled{background:#C9A84C;border-color:#C9A84C;}
+.pin-key{background:#FAFAF8;border:1px solid #E8E4DA;border-radius:6px;font-family:inherit;font-size:18px;font-weight:600;color:#141414;padding:14px;cursor:pointer;}
+.pin-key:hover{background:#F7F0DC;border-color:#E8D28A;}
+.mrow{margin-bottom:14px;}
+.mrow label{display:block;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;margin-bottom:5px;}
+.mrow input,.mrow select,.mrow textarea{width:100%;border:1px solid #E8E4DA;border-radius:5px;padding:8px 11px;font-family:inherit;font-size:13px;color:#1A1A1A;background:#FAFAF8;outline:none;}
+.mrow input:focus,.mrow select:focus,.mrow textarea:focus{border-color:#C9A84C;background:#fff;}
+.mrow textarea{resize:vertical;min-height:70px;}
+.two-col-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+#add-fab{display:none;position:fixed;bottom:28px;right:28px;background:#C9A84C;color:#fff;border:none;border-radius:50px;font-family:inherit;font-size:13px;font-weight:600;padding:12px 22px;cursor:pointer;box-shadow:0 4px 16px rgba(201,168,76,0.4);z-index:100;gap:6px;align-items:center;}
+#add-fab:hover{background:#9A7A2E;}
+body.unlocked #add-fab{display:flex;}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#141414;color:#fff;font-size:13px;font-weight:500;padding:11px 20px;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,0.2);opacity:0;transition:opacity .3s;pointer-events:none;z-index:500;}
+#toast.show{opacity:1;}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal-box{background:#fff;border-radius:10px;padding:28px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+.modal-btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.mbtn{background:#C9A84C;color:#fff;border:none;font-family:inherit;font-size:12px;font-weight:600;padding:9px 20px;border-radius:5px;cursor:pointer;}
+.mbtn:hover{background:#9A7A2E;}
+.mbtn-cancel{background:#fff;color:#6B6B6B;border:1px solid #E8E4DA;font-family:inherit;font-size:12px;padding:9px 18px;border-radius:5px;cursor:pointer;}
+.mbtn-cancel:hover{border-color:#C9A84C;color:#9A7A2E;}
+.mbtn-del{background:#fff;color:#8B2E2E;border:1px solid #E8C0C0;font-family:inherit;font-size:12px;padding:9px 18px;border-radius:5px;cursor:pointer;margin-right:auto;}
+.mbtn-del:hover{background:#FAEAEA;}
+.detail-row{display:flex;gap:10px;margin-bottom:10px;font-size:13px;}
+.detail-key{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;min-width:90px;padding-top:2px;}
+.detail-val{color:#3D3D3D;flex:1;}
+#pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+#pin-error{font-size:12px;color:#8B2E2E;margin-top:8px;min-height:18px;}
+</style>
+</head>
+<body>
+<div id="header">
+  <div id="header-inner">
+    <div id="logo">D</div>
+    <div id="logo-text">The Durham Hotel<span>Events Calendar</span></div>
+    <div id="header-right">
+      <button id="today-btn" onclick="goToday()">Today</button>
+      <button id="lock-btn" onclick="handleLockClick()">&#128274; Locked</button>
+      <button id="dl-btn" onclick="doDownload()">&#8595; Download</button>
+    </div>
+  </div>
+  <div id="viewbar">
+    <button class="vtab active" onclick="switchView('calendar',this)">&#128197; Calendar</button>
+    <button class="vtab" onclick="switchView('grid',this)">&#9783; Grid</button>
+    <button class="vtab" onclick="switchView('list',this)">&#9776; List</button>
+    <button class="vtab" onclick="switchView('import',this)">&#128196; Import BEO</button>
+    <div id="month-nav">
+      <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+      <div id="month-label"></div>
+      <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+    </div>
+  </div>
+</div>
+
+<div id="body">
+  <div id="legend">
+    <div class="leg-item"><span class="evt-dot" style="background:var(--c-group)"></span>Groups / Room Blocks</div>
+    <div class="leg-item"><span class="evt-dot" style="background:var(--c-private)"></span>Private Events</div>
+    <div class="leg-item"><span class="evt-dot" style="background:var(--c-semiprivate)"></span>Semi-Private</div>
+    <div class="leg-item"><span class="evt-dot" style="background:var(--c-rooftop)"></span>Rooftop Rentals</div>
+    <div class="leg-item"><span class="evt-dot" style="background:var(--c-restaurant)"></span>Restaurant Buyouts</div>
+    <div class="leg-item"><span class="evt-dot" style="background:var(--c-coffee)"></span>Coffee Bar Activations</div>
+    <div class="leg-item"><span class="evt-dot" style="background:var(--c-maintenance)"></span>Maintenance / Closures</div>
+    <div class="leg-item"><span class="evt-dot" style="background:var(--c-staff)"></span>Staff Notes</div>
+  </div>
+
+  <div id="view-calendar" class="view active">
+    <div id="cal-grid">
+      <div class="cal-weekdays">
+        <div class="cal-wday">Sun</div><div class="cal-wday">Mon</div><div class="cal-wday">Tue</div>
+        <div class="cal-wday">Wed</div><div class="cal-wday">Thu</div><div class="cal-wday">Fri</div><div class="cal-wday">Sat</div>
+      </div>
+      <div class="cal-days" id="cal-days"></div>
+    </div>
+  </div>
+
+  <div id="view-grid" class="view">
+    <table id="grid-table">
+      <thead><tr><th>Date</th><th>Event Name</th><th>Type</th><th>Time</th><th>Guests</th><th>Space</th><th>Notes</th></tr></thead>
+      <tbody id="grid-body"></tbody>
+    </table>
+  </div>
+
+  <div id="view-list" class="view">
+    <div id="list-body"></div>
+  </div>
+  <!-- IMPORT VIEW -->
+  <div id="view-import" class="view">
+
+    <!-- LOCKED STATE -->
+    <div id="import-locked">
+      <div style="background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:48px 32px;text-align:center;">
+        <div style="font-size:40px;margin-bottom:16px">&#128274;</div>
+        <h3 style="font-size:18px;font-weight:600;color:#141414;margin-bottom:8px;">Manager PIN Required</h3>
+        <p style="font-size:13px;color:#6B6B6B;margin-bottom:24px;max-width:340px;margin-left:auto;margin-right:auto;">Importing BEOs requires manager access.</p>
+        <button onclick="openImportPin()" style="background:#C9A84C;color:#fff;border:none;font-family:inherit;font-size:13px;font-weight:600;padding:11px 28px;border-radius:6px;cursor:pointer;">Enter PIN</button>
+      </div>
+    </div>
+
+    <!-- UNLOCKED STATE -->
+    <div id="import-unlocked" style="display:none;">
+
+      <div style="background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:22px 24px;margin-bottom:14px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;margin-bottom:14px;">How it works</div>
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          <div style="display:flex;gap:13px;font-size:13px;color:#3D3D3D;">
+            <div style="width:24px;height:24px;background:#F7F0DC;border:1px solid #E8D28A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#9A7A2E;flex-shrink:0;margin-top:1px;">1</div>
+            Upload one or more BEO or Group Resume PDFs below.
+          </div>
+          <div style="display:flex;gap:13px;font-size:13px;color:#3D3D3D;">
+            <div style="width:24px;height:24px;background:#F7F0DC;border:1px solid #E8D28A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#9A7A2E;flex-shrink:0;margin-top:1px;">2</div>
+            Click <strong style="margin-left:4px;">Parse BEOs</strong> — AI reads the documents and extracts all events.
+          </div>
+          <div style="display:flex;gap:13px;font-size:13px;color:#3D3D3D;">
+            <div style="width:24px;height:24px;background:#F7F0DC;border:1px solid #E8D28A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#9A7A2E;flex-shrink:0;margin-top:1px;">3</div>
+            Review the extracted events, then click <strong style="margin-left:4px;">Add to Calendar</strong>.
+          </div>
+          <div style="display:flex;gap:13px;font-size:13px;color:#3D3D3D;">
+            <div style="width:24px;height:24px;background:#F7F0DC;border:1px solid #E8D28A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#9A7A2E;flex-shrink:0;margin-top:1px;">4</div>
+            Download the file to save everything permanently.
+          </div>
+        </div>
+      </div>
+
+      <!-- API KEY -->
+      <div style="background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:18px 22px;margin-bottom:14px;" id="api-key-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;">Anthropic API Key</div>
+          <span id="key-status" style="font-size:11px;font-weight:600;"></span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="password" id="api-key-input" placeholder="sk-ant-..." style="flex:1;border:1px solid #E8E4DA;border-radius:5px;padding:8px 11px;font-family:monospace;font-size:13px;color:#1A1A1A;background:#FAFAF8;outline:none;">
+          <button onclick="saveApiKey()" style="background:#C9A84C;color:#fff;border:none;font-family:inherit;font-size:12px;font-weight:600;padding:8px 16px;border-radius:5px;cursor:pointer;white-space:nowrap;">Save Key</button>
+          <button onclick="clearApiKey()" style="background:#fff;border:1px solid #E8E4DA;color:#6B6B6B;font-family:inherit;font-size:12px;padding:8px 12px;border-radius:5px;cursor:pointer;white-space:nowrap;">Clear</button>
+        </div>
+        <div style="font-size:11px;color:#C4C4C4;margin-top:7px;">Your key is saved inside this file only. Never share it. Get one at console.anthropic.com</div>
+      </div>
+
+      <!-- UPLOAD AREA -->
+      <div style="background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:22px 24px;margin-bottom:14px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;margin-bottom:12px;">Upload PDFs</div>
+        <div id="drop-zone" onclick="document.getElementById('pdf-input').click()"
+          style="border:2px dashed #E8D28A;border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFAF8;">
+          <div style="font-size:28px;margin-bottom:10px;">&#128196;</div>
+          <div style="font-size:14px;font-weight:500;color:#9A7A2E;margin-bottom:4px;">Click to upload BEO or Group Resume PDFs</div>
+          <div style="font-size:12px;color:#C4C4C4;">Multiple files supported</div>
+        </div>
+        <input type="file" id="pdf-input" accept=".pdf" multiple style="display:none;" onchange="handleFiles(this.files)">
+        <div id="file-list" style="margin-top:12px;display:none;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;margin-bottom:8px;">Files ready to parse</div>
+          <div id="file-items"></div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button id="parse-btn" onclick="parseBEOs()" disabled
+            style="background:#C9A84C;color:#fff;border:none;font-family:inherit;font-size:13px;font-weight:600;padding:10px 24px;border-radius:5px;cursor:pointer;opacity:0.4;transition:opacity .2s;">
+            &#9889; Parse BEOs with AI
+          </button>
+          <button onclick="clearFiles()" style="background:#fff;border:1px solid #E8E4DA;color:#6B6B6B;font-family:inherit;font-size:12px;padding:8px 16px;border-radius:5px;cursor:pointer;">Clear Files</button>
+          <span id="parse-status" style="font-size:12px;color:#6B6B6B;"></span>
+        </div>
+      </div>
+
+      <!-- LOADING -->
+      <div id="parse-loading" style="display:none;background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:40px 24px;text-align:center;margin-bottom:14px;">
+        <div style="font-size:32px;margin-bottom:14px;">&#129302;</div>
+        <div style="font-size:15px;font-weight:500;color:#141414;margin-bottom:6px;">Reading your BEOs...</div>
+        <div style="font-size:13px;color:#6B6B6B;" id="loading-msg">Extracting event details from PDFs</div>
+        <div style="margin-top:16px;background:#F2F2F0;border-radius:4px;height:4px;overflow:hidden;">
+          <div id="loading-bar" style="height:100%;background:#C9A84C;width:0%;transition:width .5s;border-radius:4px;"></div>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div id="parse-results" style="display:none;">
+        <div style="background:#fff;border:1px solid #E8E4DA;border-radius:8px;padding:22px 24px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9A7A2E;">Extracted Events</div>
+            <div style="display:flex;gap:10px;">
+              <button onclick="addAllToCalendar()" id="add-all-btn"
+                style="background:#C9A84C;color:#fff;border:none;font-family:inherit;font-size:12px;font-weight:600;padding:8px 18px;border-radius:5px;cursor:pointer;">
+                &#10003; Add All to Calendar
+              </button>
+              <button onclick="clearResults()" style="background:#fff;border:1px solid #E8E4DA;color:#6B6B6B;font-family:inherit;font-size:12px;padding:8px 14px;border-radius:5px;cursor:pointer;">Clear</button>
+            </div>
+          </div>
+          <div id="results-list"></div>
+        </div>
+      </div>
+
+      <!-- ERROR -->
+      <div id="parse-error" style="display:none;background:#FAEAEA;border:1px solid #E8C0C0;border-radius:8px;padding:18px 22px;margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:500;color:#8B2E2E;margin-bottom:5px;">Parse failed</div>
+        <div id="error-msg" style="font-size:13px;color:#8B2E2E;"></div>
+        <button onclick="hideError()" style="margin-top:10px;background:#fff;border:1px solid #E8C0C0;color:#8B2E2E;font-family:inherit;font-size:11px;padding:5px 12px;border-radius:4px;cursor:pointer;">Dismiss</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- IMPORT PIN MODAL -->
+  <div id="import-pin-bg" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:10px;padding:32px 28px;width:320px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+      <h3 style="font-size:18px;font-weight:600;margin-bottom:6px;color:#141414;">&#128274; Manager PIN</h3>
+      <p style="font-size:13px;color:#6B6B6B;margin-bottom:20px;">Enter PIN to access BEO import.</p>
+      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:20px;">
+        <div class="pin-dot" id="ip0"></div><div class="pin-dot" id="ip1"></div>
+        <div class="pin-dot" id="ip2"></div><div class="pin-dot" id="ip3"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+        <button class="pin-key" onclick="ipPress('1')">1</button>
+        <button class="pin-key" onclick="ipPress('2')">2</button>
+        <button class="pin-key" onclick="ipPress('3')">3</button>
+        <button class="pin-key" onclick="ipPress('4')">4</button>
+        <button class="pin-key" onclick="ipPress('5')">5</button>
+        <button class="pin-key" onclick="ipPress('6')">6</button>
+        <button class="pin-key" onclick="ipPress('7')">7</button>
+        <button class="pin-key" onclick="ipPress('8')">8</button>
+        <button class="pin-key" onclick="ipPress('9')">9</button>
+        <button class="pin-key" style="grid-column:2" onclick="ipPress('0')">0</button>
+        <button class="pin-key" style="color:#8B2E2E;font-size:14px;" onclick="ipBack()">&#9003;</button>
+      </div>
+      <div id="ip-err" style="font-size:12px;color:#8B2E2E;margin-top:10px;min-height:18px;"></div>
+      <button onclick="closeImportPin()" style="margin-top:14px;background:none;border:none;font-family:inherit;font-size:12px;color:#6B6B6B;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
+</div>
+
+<button id="add-fab" onclick="openEventModal()">+ Add Event</button>
+
+<!-- PIN MODAL -->
+<div id="pin-modal-bg" class="modal-bg">
+  <div class="modal-box" style="width:320px;text-align:center;">
+    <h3 style="font-size:18px;font-weight:600;margin-bottom:6px;color:#141414;">&#128274; Enter PIN</h3>
+    <p style="font-size:13px;color:#6B6B6B;margin-bottom:20px;">Enter the 4-digit manager PIN to add or edit events.</p>
+    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:20px;">
+      <div class="pin-dot" id="dot0"></div><div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div><div class="pin-dot" id="dot3"></div>
+    </div>
+    <div id="pin-keypad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key" style="grid-column:2" onclick="pinPress('0')">0</button>
+      <button class="pin-key" style="color:#8B2E2E;font-size:14px;" onclick="pinBack()">&#9003;</button>
+    </div>
+    <div id="pin-error"></div>
+  </div>
+</div>
+
+<!-- EVENT FORM MODAL -->
+<div id="evt-modal-bg" class="modal-bg">
+  <div class="modal-box" style="width:560px;">
+    <h3 id="evt-modal-title" style="font-size:18px;font-weight:600;margin-bottom:20px;color:#141414;">Add Event</h3>
+    <div class="mrow"><label>Event Name</label><input type="text" id="f-name" placeholder="e.g. Johnson Wedding Reception"></div>
+    <div class="two-col-form">
+      <div class="mrow"><label>Start Date</label><input type="date" id="f-start"></div>
+      <div class="mrow"><label>End Date (leave blank if single day)</label><input type="date" id="f-end"></div>
+      <div class="mrow"><label>Start Time</label><input type="time" id="f-time-start"></div>
+      <div class="mrow"><label>End Time</label><input type="time" id="f-time-end"></div>
+    </div>
+    <div class="two-col-form">
+      <div class="mrow"><label>Event Type</label>
+        <select id="f-type">
+          <option value="group">Groups / Room Blocks</option>
+          <option value="private">Private Events</option>
+          <option value="semiprivate">Semi-Private Events</option>
+          <option value="rooftop">Rooftop Rentals</option>
+          <option value="restaurant">Restaurant Buyouts</option>
+          <option value="coffee">Coffee Bar Activations</option>
+          <option value="maintenance">Maintenance / Closures</option>
+          <option value="staff">Staff Notes</option>
+        </select>
+      </div>
+      <div class="mrow"><label>Guest Count</label><input type="number" id="f-guests" placeholder="e.g. 50" min="0"></div>
+    </div>
+    <div class="mrow"><label>Space / Location</label><input type="text" id="f-space" placeholder="e.g. Rooftop, Mezz, Rooms 401-410"></div>
+    <div class="mrow"><label>Contact Name</label><input type="text" id="f-contact" placeholder="e.g. Sarah Miller"></div>
+    <div class="mrow"><label>Notes for Staff</label><textarea id="f-notes" placeholder="Anything the front desk should know..."></textarea></div>
+    <div class="modal-btns">
+      <button class="mbtn-del" id="evt-del-btn" onclick="deleteEvent()" style="display:none;">Delete Event</button>
+      <button class="mbtn-cancel" onclick="closeEventModal()">Cancel</button>
+      <button class="mbtn" onclick="saveEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detail-modal-bg" class="modal-bg" onclick="if(event.target===this)closeDetail()">
+  <div class="modal-box" style="width:480px;">
+    <div id="detail-type-badge" style="margin-bottom:14px;"></div>
+    <h3 id="detail-title" style="font-size:20px;font-weight:600;margin-bottom:16px;color:#141414;"></h3>
+    <div id="detail-rows"></div>
+    <div class="modal-btns">
+      <button class="mbtn-del" id="detail-del-btn" onclick="deleteFromDetail()" style="display:none;">Delete</button>
+      <button class="mbtn-cancel" onclick="closeDetail()">Close</button>
+      <button class="mbtn" id="detail-edit-btn" onclick="editFromDetail()" style="display:none;">Edit</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script>
+var EVENTS = [];
+var PIN = '0315';
+var unlocked = false;
+var currentYear, currentMonth;
+var editingId = null;
+var detailId = null;
+var pinEntry = '';
+
+var TYPE_LABELS = {
+  group:'Groups / Room Blocks',private:'Private Events',semiprivate:'Semi-Private',
+  rooftop:'Rooftop Rentals',restaurant:'Restaurant Buyouts',coffee:'Coffee Bar Activations',
+  maintenance:'Maintenance / Closures',staff:'Staff Notes'
+};
+
+(function(){
+  var saved = document.getElementById('saved-events');
+  if(saved) try{EVENTS=JSON.parse(saved.textContent)||[];}catch(e){}
+  var d = new Date();
+  currentYear = d.getFullYear();
+  currentMonth = d.getMonth();
+  updateMonthLabel();
+  renderAll();
+})();
+
+function switchView(id, btn){
+  if(id==='import' && !importUnlocked){document.getElementById('import-locked').style.display='block';document.getElementById('import-unlocked').style.display='none';}
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  document.querySelectorAll('.vtab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('view-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function changeMonth(dir){
+  currentMonth+=dir;
+  if(currentMonth>11){currentMonth=0;currentYear++;}
+  if(currentMonth<0){currentMonth=11;currentYear--;}
+  updateMonthLabel();
+  renderAll();
+}
+
+function goToday(){
+  var d=new Date();
+  currentYear=d.getFullYear();currentMonth=d.getMonth();
+  updateMonthLabel();renderAll();
+}
+
+function updateMonthLabel(){
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('month-label').textContent=months[currentMonth]+' '+currentYear;
+}
+
+function renderAll(){renderCalendar();renderGrid();renderList();}
+
+function pad(n){return n<10?'0'+n:''+n;}
+
+function fmtDate(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+
+function getTodayStr(){var d=new Date();return fmtDate(d);}
+
+function getEventsForDate(ds){
+  return EVENTS.filter(function(e){
+    var end=e.end&&e.end!==e.start?e.end:e.start;
+    return e.start<=ds&&end>=ds;
+  }).sort(function(a,b){return(a.timeStart||'').localeCompare(b.timeStart||'');});
+}
+
+function formatDisplayDate(ds){
+  if(!ds) return '';
+  var d=new Date(ds+'T12:00:00');
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+}
+
+function fmtTime(t){
+  if(!t) return '';
+  var p=t.split(':');var h=parseInt(p[0]);var m=p[1];
+  var ap=h>=12?'pm':'am';h=h%12||12;return h+':'+m+ap;
+}
+
+function renderCalendar(){
+  var container=document.getElementById('cal-days');
+  container.innerHTML='';
+  var today=getTodayStr();
+  var firstDay=new Date(currentYear,currentMonth,1).getDay();
+  var daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
+  var daysInPrev=new Date(currentYear,currentMonth,0).getDate();
+  var totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
+  for(var i=0;i<totalCells;i++){
+    var cell=document.createElement('div');cell.className='cal-cell';
+    var date,isOther=false;
+    if(i<firstDay){date=new Date(currentYear,currentMonth-1,daysInPrev-firstDay+i+1);isOther=true;}
+    else if(i>=firstDay+daysInMonth){date=new Date(currentYear,currentMonth+1,i-firstDay-daysInMonth+1);isOther=true;}
+    else{date=new Date(currentYear,currentMonth,i-firstDay+1);}
+    if(isOther) cell.classList.add('other-month');
+    var ds=fmtDate(date);
+    if(ds===today) cell.classList.add('today');
+    var dayNum=document.createElement('div');dayNum.className='cal-day-num';dayNum.textContent=date.getDate();cell.appendChild(dayNum);
+    var dayEvts=getEventsForDate(ds);
+    var max=3;
+    dayEvts.slice(0,max).forEach(function(evt){
+      var el=document.createElement('div');
+      el.className='cal-evt type-'+evt.type;el.textContent=evt.name;
+      el.onclick=(function(id){return function(e){e.stopPropagation();openDetail(id);};})(evt.id);
+      cell.appendChild(el);
+    });
+    if(dayEvts.length>max){
+      var more=document.createElement('div');more.className='cal-more';
+      more.textContent='+'+(dayEvts.length-max)+' more';
+      more.onclick=(function(d){return function(){openDetail(getEventsForDate(d)[0].id);};})(ds);
+      cell.appendChild(more);
+    }
+    var addBtn=document.createElement('button');addBtn.className='cal-add-btn';addBtn.innerHTML='+';addBtn.title='Add event';
+    addBtn.onclick=(function(d){return function(e){e.stopPropagation();openEventModal(d);};})(ds);
+    cell.appendChild(addBtn);
+    container.appendChild(cell);
+  }
+}
+
+function renderGrid(){
+  var tbody=document.getElementById('grid-body');tbody.innerHTML='';
+  var today=getTodayStr();
+  var ym=currentYear+'-'+pad(currentMonth+1);
+  var monthEvts=EVENTS.filter(function(e){return e.start.slice(0,7)===ym||(e.end&&e.end.slice(0,7)===ym);});
+  monthEvts.sort(function(a,b){return a.start.localeCompare(b.start);});
+  if(!monthEvts.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#6B6B6B;padding:40px;">No events this month.</td></tr>';return;
+  }
+  monthEvts.forEach(function(evt){
+    var tr=document.createElement('tr');
+    if(evt.start===today) tr.classList.add('grid-today-row');
+    tr.onclick=function(){openDetail(evt.id);};
+    var dateStr=formatDisplayDate(evt.start)+(evt.end&&evt.end!==evt.start?' &#8211; '+formatDisplayDate(evt.end):'');
+    var timeStr=evt.timeStart?fmtTime(evt.timeStart)+(evt.timeEnd?' &#8211; '+fmtTime(evt.timeEnd):''):'&#8212;';
+    tr.innerHTML='<td style="font-weight:600;color:#141414;">'+dateStr+'</td>'
+      +'<td style="font-weight:500;color:#141414;">'+evt.name+'</td>'
+      +'<td><span class="evt-pill type-'+evt.type+'">'+TYPE_LABELS[evt.type]+'</span></td>'
+      +'<td>'+timeStr+'</td>'
+      +'<td>'+(evt.guests||'&#8212;')+'</td>'
+      +'<td>'+(evt.space||'&#8212;')+'</td>'
+      +'<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(evt.notes||'&#8212;')+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function renderList(){
+  var container=document.getElementById('list-body');container.innerHTML='';
+  if(!EVENTS.length){container.innerHTML='<div style="text-align:center;padding:60px 20px;color:#6B6B6B;"><div style="font-size:32px;">&#128197;</div><p style="font-size:13px;margin-top:8px;">No events yet. Unlock to add events.</p></div>';return;}
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var monthSet={};
+  EVENTS.forEach(function(e){monthSet[e.start.slice(0,7)]=true;});
+  var monthKeys=Object.keys(monthSet).sort();
+  monthKeys.forEach(function(ym){
+    var p=ym.split('-');var y=parseInt(p[0]);var m=parseInt(p[1])-1;
+    var group=document.createElement('div');group.className='list-month-group';
+    group.innerHTML='<div class="list-month-label">'+months[m]+' '+y+'</div>';
+    var monthEvts=EVENTS.filter(function(e){return e.start.slice(0,7)===ym;});
+    monthEvts.sort(function(a,b){return a.start.localeCompare(b.start);});
+    monthEvts.forEach(function(evt){
+      var d=new Date(evt.start+'T12:00:00');
+      var timeStr=evt.timeStart?fmtTime(evt.timeStart)+(evt.timeEnd?' &#8211; '+fmtTime(evt.timeEnd):''):'';
+      var el=document.createElement('div');el.className='list-evt';
+      el.innerHTML='<div class="list-date-col"><div class="list-day-num">'+d.getDate()+'</div><div class="list-day-name">'+dayNames[d.getDay()]+'</div></div>'
+        +'<div class="list-divider"></div>'
+        +'<div class="list-content">'
+        +'<div class="list-evt-title">'+evt.name+'</div>'
+        +'<div class="list-evt-meta">'
+        +'<span class="evt-pill type-'+evt.type+'">'+TYPE_LABELS[evt.type]+'</span>'
+        +(timeStr?'<span>'+timeStr+'</span>':'')
+        +(evt.guests?'<span>&#128100; '+evt.guests+' guests</span>':'')
+        +(evt.space?'<span>&#128205; '+evt.space+'</span>':'')
+        +'</div>'
+        +(evt.notes?'<div class="list-evt-notes">'+evt.notes+'</div>':'')
+        +'</div>'
+        +'<div class="list-actions">'
+        +'<button class="act-btn" onclick="event.stopPropagation();editEvent('+evt.id+')">Edit</button>'
+        +'<button class="act-btn del" onclick="event.stopPropagation();confirmDelete('+evt.id+')">Delete</button>'
+        +'</div>';
+      el.querySelector('.list-content').onclick=function(){openDetail(evt.id);};
+      group.appendChild(el);
+    });
+    container.appendChild(group);
+  });
+}
+
+function handleLockClick(){
+  if(unlocked){
+    unlocked=false;document.body.classList.remove('unlocked');
+    document.getElementById('lock-btn').innerHTML='&#128274; Locked';
+    document.getElementById('lock-btn').classList.remove('unlocked');
+    showToast('Locked');
+  } else {openPin();}
+}
+
+function openPin(){
+  pinEntry='';updatePinDots();
+  document.getElementById('pin-error').textContent='';
+  document.getElementById('pin-modal-bg').classList.add('open');
+}
+
+function pinPress(d){
+  if(pinEntry.length>=4) return;
+  pinEntry+=d;updatePinDots();
+  if(pinEntry.length===4){
+    setTimeout(function(){
+      if(pinEntry===PIN){
+        unlocked=true;document.body.classList.add('unlocked');
+        document.getElementById('lock-btn').innerHTML='&#128275; Unlocked';
+        document.getElementById('lock-btn').classList.add('unlocked');
+        document.getElementById('pin-modal-bg').classList.remove('open');
+        showToast('Edit mode unlocked');
+      } else {
+        document.getElementById('pin-error').textContent='Incorrect PIN. Try again.';
+        pinEntry='';updatePinDots();
+      }
+    },150);
+  }
+}
+
+function pinBack(){
+  pinEntry=pinEntry.slice(0,-1);updatePinDots();
+  document.getElementById('pin-error').textContent='';
+}
+
+function updatePinDots(){
+  for(var i=0;i<4;i++) document.getElementById('dot'+i).classList.toggle('filled',i<pinEntry.length);
+}
+
+document.getElementById('pin-modal-bg').addEventListener('click',function(e){
+  if(e.target===this){this.classList.remove('open');pinEntry='';updatePinDots();}
+});
+
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('pin-modal-bg').classList.contains('open')){
+    if(e.key>='0'&&e.key<='9') pinPress(e.key);
+    if(e.key==='Backspace') pinBack();
+    if(e.key==='Escape'){document.getElementById('pin-modal-bg').classList.remove('open');pinEntry='';updatePinDots();}
+  }
+  if(e.key==='Escape'){closeEventModal();closeDetail();}
+});
+
+function openEventModal(prefillDate){
+  if(!unlocked){openPin();return;}
+  editingId=null;
+  document.getElementById('evt-modal-title').textContent='Add Event';
+  document.getElementById('evt-del-btn').style.display='none';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-start').value=prefillDate||getTodayStr();
+  document.getElementById('f-end').value='';
+  document.getElementById('f-time-start').value='';
+  document.getElementById('f-time-end').value='';
+  document.getElementById('f-type').value='group';
+  document.getElementById('f-guests').value='';
+  document.getElementById('f-space').value='';
+  document.getElementById('f-contact').value='';
+  document.getElementById('f-notes').value='';
+  document.getElementById('evt-modal-bg').classList.add('open');
+  setTimeout(function(){document.getElementById('f-name').focus();},100);
+}
+
+function editEvent(id){
+  if(!unlocked){openPin();return;}
+  var evt=EVENTS.find(function(e){return e.id===id;});
+  if(!evt) return;
+  editingId=id;
+  document.getElementById('evt-modal-title').textContent='Edit Event';
+  document.getElementById('evt-del-btn').style.display='block';
+  document.getElementById('f-name').value=evt.name||'';
+  document.getElementById('f-start').value=evt.start||'';
+  document.getElementById('f-end').value=evt.end||'';
+  document.getElementById('f-time-start').value=evt.timeStart||'';
+  document.getElementById('f-time-end').value=evt.timeEnd||'';
+  document.getElementById('f-type').value=evt.type||'group';
+  document.getElementById('f-guests').value=evt.guests||'';
+  document.getElementById('f-space').value=evt.space||'';
+  document.getElementById('f-contact').value=evt.contact||'';
+  document.getElementById('f-notes').value=evt.notes||'';
+  document.getElementById('evt-modal-bg').classList.add('open');
+}
+
+function closeEventModal(){document.getElementById('evt-modal-bg').classList.remove('open');editingId=null;}
+
+document.getElementById('evt-modal-bg').addEventListener('click',function(e){if(e.target===this)closeEventModal();});
+
+function saveEvent(){
+  var name=document.getElementById('f-name').value.trim();
+  if(!name){document.getElementById('f-name').focus();return;}
+  var start=document.getElementById('f-start').value;
+  if(!start){document.getElementById('f-start').focus();return;}
+  var evt={id:editingId||Date.now(),name:name,start:start,
+    end:document.getElementById('f-end').value||start,
+    timeStart:document.getElementById('f-time-start').value,
+    timeEnd:document.getElementById('f-time-end').value,
+    type:document.getElementById('f-type').value,
+    guests:document.getElementById('f-guests').value,
+    space:document.getElementById('f-space').value,
+    contact:document.getElementById('f-contact').value,
+    notes:document.getElementById('f-notes').value.trim()};
+  if(editingId){
+    var idx=EVENTS.findIndex(function(e){return e.id===editingId;});
+    if(idx>=0) EVENTS[idx]=evt;
+  } else {EVENTS.push(evt);}
+  EVENTS.sort(function(a,b){return a.start.localeCompare(b.start);});
+  closeEventModal();renderAll();showToast(editingId?'Event updated':'Event added');
+}
+
+function deleteEvent(){
+  if(!editingId) return;
+  if(!confirm('Delete this event?')) return;
+  EVENTS=EVENTS.filter(function(e){return e.id!==editingId;});
+  closeEventModal();renderAll();showToast('Event deleted');
+}
+
+function confirmDelete(id){
+  if(!confirm('Delete this event?')) return;
+  EVENTS=EVENTS.filter(function(e){return e.id!==id;});
+  renderAll();showToast('Event deleted');
+}
+
+function openDetail(id){
+  var evt=EVENTS.find(function(e){return e.id===id;});if(!evt) return;
+  detailId=id;
+  document.getElementById('detail-type-badge').innerHTML='<span class="evt-pill type-'+evt.type+'">'+TYPE_LABELS[evt.type]+'</span>';
+  document.getElementById('detail-title').textContent=evt.name;
+  var dateStr=formatDisplayDate(evt.start);
+  if(evt.end&&evt.end!==evt.start) dateStr+=' &#8211; '+formatDisplayDate(evt.end);
+  var timeStr=evt.timeStart?fmtTime(evt.timeStart)+(evt.timeEnd?' &#8211; '+fmtTime(evt.timeEnd):''):'';
+  var rows=[['Date',dateStr],['Time',timeStr||'&#8212;'],['Guests',evt.guests||'&#8212;'],['Space',evt.space||'&#8212;'],['Contact',evt.contact||'&#8212;'],['Notes',evt.notes||'&#8212;']];
+  document.getElementById('detail-rows').innerHTML=rows.map(function(r){
+    return '<div class="detail-row"><span class="detail-key">'+r[0]+'</span><span class="detail-val">'+r[1]+'</span></div>';
+  }).join('');
+  document.getElementById('detail-del-btn').style.display=unlocked?'block':'none';
+  document.getElementById('detail-edit-btn').style.display=unlocked?'block':'none';
+  document.getElementById('detail-modal-bg').classList.add('open');
+}
+
+function closeDetail(){document.getElementById('detail-modal-bg').classList.remove('open');detailId=null;}
+
+function editFromDetail(){closeDetail();if(detailId) editEvent(detailId);}
+
+function deleteFromDetail(){
+  if(!detailId) return;
+  if(!confirm('Delete this event?')) return;
+  EVENTS=EVENTS.filter(function(e){return e.id!==detailId;});
+  closeDetail();renderAll();showToast('Event deleted');
+}
+
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2500);
+}
+
+
+// BEO IMPORT
+var importUnlocked = false;
+var ipEntry = '';
+var pendingFiles = [];
+var parsedEvents = [];
+
+function openImportPin() {
+  ipEntry='';updateIpDots();
+  document.getElementById('ip-err').textContent='';
+  document.getElementById('import-pin-bg').style.display='flex';
+}
+
+function closeImportPin() {
+  document.getElementById('import-pin-bg').style.display='none';
+  ipEntry='';updateIpDots();
+}
+
+function ipPress(d) {
+  if(ipEntry.length>=4) return;
+  ipEntry+=d;updateIpDots();
+  if(ipEntry.length===4){
+    setTimeout(function(){
+      if(ipEntry===PIN){
+        importUnlocked=true;closeImportPin();
+        document.getElementById('import-locked').style.display='none';
+        document.getElementById('import-unlocked').style.display='block';
+        showToast('Import unlocked');
+      } else {
+        document.getElementById('ip-err').textContent='Incorrect PIN.';
+        ipEntry='';updateIpDots();
+      }
+    },150);
+  }
+}
+
+function ipBack(){ipEntry=ipEntry.slice(0,-1);updateIpDots();document.getElementById('ip-err').textContent='';}
+
+function updateIpDots(){for(var i=0;i<4;i++)document.getElementById('ip'+i).classList.toggle('filled',i<ipEntry.length);}
+
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('import-pin-bg').style.display==='flex'){
+    if(e.key>='0'&&e.key<='9'){e.preventDefault();ipPress(e.key);}
+    else if(e.key==='Backspace')ipBack();
+    else if(e.key==='Escape')closeImportPin();
+  }
+});
+
+function handleFiles(files){
+  for(var i=0;i<files.length;i++){
+    var f=files[i];
+    if(f.type==='application/pdf'||f.name.endsWith('.pdf')) pendingFiles.push(f);
+  }
+  renderFileList();
+}
+
+function renderFileList(){
+  var fl=document.getElementById('file-list');
+  var fi=document.getElementById('file-items');
+  var pb=document.getElementById('parse-btn');
+  if(!pendingFiles.length){fl.style.display='none';pb.disabled=true;pb.style.opacity='0.4';return;}
+  fl.style.display='block';pb.disabled=false;pb.style.opacity='1';
+  fi.innerHTML=pendingFiles.map(function(f,i){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F2F2F0;">'
+      +'<span style="font-size:16px;">&#128196;</span>'
+      +'<span style="flex:1;font-size:13px;color:#3D3D3D;">'+f.name+'</span>'
+      +'<span style="font-size:11px;color:#9A7A2E;">'+(f.size/1024).toFixed(0)+' KB</span>'
+      +'<button onclick="removeFile('+i+')" style="background:none;border:none;color:#C4C4C4;cursor:pointer;font-size:14px;padding:0 4px;">&#10005;</button>'
+      +'</div>';
+  }).join('');
+}
+
+function removeFile(idx){pendingFiles.splice(idx,1);renderFileList();}
+
+function clearFiles(){pendingFiles=[];document.getElementById('pdf-input').value='';renderFileList();clearResults();}
+
+function showLoading(msg){
+  document.getElementById('parse-loading').style.display='block';
+  document.getElementById('parse-results').style.display='none';
+  document.getElementById('parse-error').style.display='none';
+  document.getElementById('loading-msg').textContent=msg||'Reading documents...';
+  var bar=document.getElementById('loading-bar');
+  bar.style.width='0%';
+  setTimeout(function(){bar.style.width='40%';},300);
+  setTimeout(function(){bar.style.width='70%';},2000);
+  setTimeout(function(){bar.style.width='85%';},4000);
+}
+
+function hideLoading(){
+  var bar=document.getElementById('loading-bar');
+  bar.style.width='100%';
+  setTimeout(function(){document.getElementById('parse-loading').style.display='none';},400);
+}
+
+function showParseError(msg){
+  hideLoading();
+  document.getElementById('parse-error').style.display='block';
+  document.getElementById('error-msg').textContent=msg;
+}
+
+function hideError(){document.getElementById('parse-error').style.display='none';}
+
+function clearResults(){
+  parsedEvents=[];
+  document.getElementById('parse-results').style.display='none';
+  document.getElementById('results-list').innerHTML='';
+}
+
+var TYPE_LABELS_IMP={group:'Groups/Room Blocks',private:'Private Events',semiprivate:'Semi-Private',rooftop:'Rooftop Rentals',restaurant:'Restaurant Buyouts',coffee:'Coffee Bar',maintenance:'Maintenance',staff:'Staff Notes'};
+
+function renderResults(){
+  if(!parsedEvents.length){
+    document.getElementById('parse-error').style.display='block';
+    document.getElementById('error-msg').textContent='No events found in these documents.';
+    return;
+  }
+  document.getElementById('parse-results').style.display='block';
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('results-list').innerHTML=parsedEvents.map(function(e,i){
+    var ds=e.start?(function(){var d=new Date(e.start+'T12:00:00');return months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();})():'No date';
+    var timeStr=e.timeStart?e.timeStart+(e.timeEnd?' - '+e.timeEnd:''):'';
+    return '<div style="border:1px solid #E8E4DA;border-radius:8px;padding:14px 16px;margin-bottom:10px;">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:15px;font-weight:600;color:#141414;margin-bottom:6px;">'+e.name+'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px;">'
+      +'<span class="evt-pill type-'+e.type+'">'+(TYPE_LABELS_IMP[e.type]||e.type)+'</span>'
+      +'<span style="font-size:12px;color:#6B6B6B;">&#128197; '+ds+'</span>'
+      +(timeStr?'<span style="font-size:12px;color:#6B6B6B;">&#128336; '+timeStr+'</span>':'')
+      +(e.guests?'<span style="font-size:12px;color:#6B6B6B;">&#128100; '+e.guests+' guests</span>':'')
+      +(e.space?'<span style="font-size:12px;color:#6B6B6B;">&#128205; '+e.space+'</span>':'')
+      +'</div>'
+      +(e.notes?'<div style="font-size:12px;color:#6B6B6B;line-height:1.6;margin-top:4px;">'+e.notes+'</div>':'')
+      +'</div>'
+      +'<button onclick="addSingleEvent('+i+',this)" style="background:#EAF4EE;color:#2D6A4F;border:1px solid #B7DFC9;font-family:inherit;font-size:11px;font-weight:600;padding:5px 12px;border-radius:4px;cursor:pointer;flex-shrink:0;white-space:nowrap;">+ Add</button>'
+      +'</div></div>';
+  }).join('');
+  showToast('Found '+parsedEvents.length+' event'+(parsedEvents.length!==1?'s':''));
+}
+
+function addSingleEvent(idx,btn){
+  var e=parsedEvents[idx];if(!e) return;
+  e.id=Date.now()+idx;
+  EVENTS.push(e);
+  EVENTS.sort(function(a,b){return a.start.localeCompare(b.start);});
+  btn.textContent='\u2713 Added';btn.style.background='#C9A84C';btn.style.color='#fff';btn.style.borderColor='#C9A84C';btn.disabled=true;
+  showToast(e.name+' added');
+}
+
+function addAllToCalendar(){
+  var added=0;
+  parsedEvents.forEach(function(e,i){
+    if(!e.id){e.id=Date.now()+i;EVENTS.push(e);added++;}
+  });
+  EVENTS.sort(function(a,b){return a.start.localeCompare(b.start);});
+  document.querySelectorAll('#results-list button').forEach(function(btn){
+    btn.textContent='\u2713 Added';btn.style.background='#C9A84C';btn.style.color='#fff';btn.style.borderColor='#C9A84C';btn.disabled=true;
+  });
+  showToast('Added '+added+' event'+(added!==1?'s':'')+' to calendar');
+}
+
+
+
+// API KEY MANAGEMENT
+var STORED_API_KEY = '';
+
+(function(){
+  var el = document.getElementById('saved-api-key');
+  if(el) try { STORED_API_KEY = JSON.parse(el.textContent) || ''; } catch(e) {}
+  updateKeyStatus();
+})();
+
+function updateKeyStatus() {
+  var el = document.getElementById('key-status');
+  var inp = document.getElementById('api-key-input');
+  if(!el) return;
+  if(STORED_API_KEY) {
+    el.textContent = '\u2713 Key saved';
+    el.style.color = '#2D6A4F';
+    if(inp) inp.placeholder = 'sk-ant-... (key is saved)';
+  } else {
+    el.textContent = 'No key saved';
+    el.style.color = '#C4C4C4';
+  }
+}
+
+function saveApiKey() {
+  var inp = document.getElementById('api-key-input');
+  var val = inp ? inp.value.trim() : '';
+  if(!val) { showToast('Please enter your API key first'); return; }
+  if(!val.startsWith('sk-ant-')) { showToast('That doesn\'t look like a valid Anthropic key'); return; }
+  STORED_API_KEY = val;
+  inp.value = '';
+  updateKeyStatus();
+  showToast('API key saved — download the file to keep it permanently');
+}
+
+function clearApiKey() {
+  STORED_API_KEY = '';
+  var inp = document.getElementById('api-key-input');
+  if(inp) inp.value = '';
+  updateKeyStatus();
+  showToast('API key cleared');
+}
+
+function doDownload(){
+  var src = document.documentElement.outerHTML;
+  src = src.replace(/<script id="saved-events"[^>]*>[\s\S]*?<\/script>/g,'');
+  src = src.replace(/<script id="saved-api-key"[^>]*>[\s\S]*?<\/script>/g,'');
+  var ds = '<script id="saved-events" type="application/json">'+JSON.stringify(EVENTS)+'<\/script>'
+    + '\n<script id="saved-api-key" type="application/json">'+JSON.stringify(STORED_API_KEY)+'<\/script>';
+  src = src.replace('<\/body>', ds+'\n<\/body>');
+  var blob=new Blob(['<!DOCTYPE html>\n'+src],{type:'text/html'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='durham_events_calendar.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  showToast('Saved');
+}
+</script>
+
+<script>
+// Drop zone init (runs after DOM)
+(function() {
+  var dz = document.getElementById('drop-zone');
+  if(!dz) return;
+  dz.addEventListener('dragover', function(e){e.preventDefault();dz.style.borderColor='#C9A84C';dz.style.background='#F7F0DC';});
+  dz.addEventListener('dragleave', function(){dz.style.borderColor='#E8D28A';dz.style.background='#FAFAF8';});
+  dz.addEventListener('drop', function(e){e.preventDefault();dz.style.borderColor='#E8D28A';dz.style.background='#FAFAF8';handleFiles(e.dataTransfer.files);});
+})();
+
+async function fileToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(){ resolve(reader.result.split(',')[1]); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function parseBEOs() {
+  if(!pendingFiles.length) return;
+  showLoading('Reading ' + pendingFiles.length + ' PDF' + (pendingFiles.length > 1 ? 's' : '') + '...');
+  try {
+    var content = [];
+    for(var i = 0; i < pendingFiles.length; i++) {
+      document.getElementById('loading-msg').textContent = 'Loading file ' + (i+1) + ' of ' + pendingFiles.length + '...';
+      var b64 = await fileToBase64(pendingFiles[i]);
+      content.push({ type:'document', source:{ type:'base64', media_type:'application/pdf', data:b64 } });
+    }
+    content.push({ type:'text', text:'These are Banquet Event Order (BEO) and Group Resume documents from The Durham Hotel. Extract ALL events and return a JSON array. Each event: name (Group Name + function, e.g. "DPR Construction Dinner"), start (YYYY-MM-DD), end (YYYY-MM-DD), timeStart (HH:MM 24hr), timeEnd (HH:MM 24hr), type (one of: group/private/semiprivate/rooftop/restaurant/coffee/maintenance/staff), guests (count as string), space (venue name), contact (name + phone/email), notes (dietary restrictions, setup notes, billing, key timeline info for front desk). Type guide: rooftop buyouts=rooftop, restaurant buyouts=restaurant, semi-private sections=semiprivate, groups with room blocks=group, social/private=private, yoga/pilates/exercise=staff, coffee bar=coffee. Return ONLY valid JSON array, no markdown, no explanation.' });
+    document.getElementById('loading-msg').textContent = 'AI is reading your BEOs...';
+    if(!STORED_API_KEY) {
+      showParseError('No API key saved. Enter your Anthropic API key in the field above and click Save Key first.');
+      return;
+    }
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':STORED_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-iab':'true'},
+      body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:4000, messages:[{role:'user',content:content}] })
+    });
+    if(!response.ok){ var err=await response.json(); throw new Error(err.error?err.error.message:'API error '+response.status); }
+    var data = await response.json();
+    var text = data.content.map(function(c){return c.type==='text'?c.text:'';}).join('');
+    text = text.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+    var events = JSON.parse(text);
+    if(!Array.isArray(events)) throw new Error('Unexpected response format');
+    parsedEvents = events.map(function(e){
+      return { id:null, name:e.name||'Untitled Event', start:e.start||'', end:e.end||e.start||'',
+        timeStart:e.timeStart||'', timeEnd:e.timeEnd||'', type:e.type||'private',
+        guests:e.guests?String(e.guests):'', space:e.space||'', contact:e.contact||'', notes:e.notes||'' };
+    });
+    hideLoading();
+    renderResults();
+  } catch(err) {
+    showParseError(err.message||'Something went wrong. Check your internet connection and try again.');
+  }
+}
+</script>
+
+</body>
+</html>
