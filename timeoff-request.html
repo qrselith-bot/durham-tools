@@ -212,7 +212,7 @@
 
     <div class="field">
       <label>Notes (optional)</label>
-      <textarea id="f-notes" placeholder="Anything Eli should know..."></textarea>
+      <textarea id="f-notes" placeholder="Anything We should know..."></textarea>
     </div>
 
     <div class="conflict-notice" id="conflict-notice">
@@ -229,7 +229,7 @@
   <div class="success" id="success-view">
     <div class="check">✓</div>
     <h2>Request Submitted</h2>
-    <p>Your request has been sent. Eli will review it and follow up with you directly.</p>
+    <p>Your request has been sent. We will review it and follow up with you directly.</p>
     <p class="another" onclick="resetForm()">Submit another request</p>
   </div>
 </div>
@@ -305,7 +305,7 @@
       const dateRange = start === end ? formatDate(start) : `${formatDate(start)} – ${formatDate(end)}`;
       const subject = `[Time Off Request] ${name} — ${dateRange}`;
       const body = `New time off request submitted via the staff form.\n\nAssociate: ${name}\nDates: ${dateRange}\nType: ${type}\nNotes: ${notes || 'None'}\n\nOpen the manager dashboard to approve or deny:\nhttps://qrselith-bot.github.io/durham-tools/timeoff-manager.html`;
-      window.location.href = `mailto:eli@thedurhamhotel.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = `mailto:ethompson@thedurham.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
       document.getElementById('form-view').style.display = 'none';
       document.getElementById('success-view').style.display = 'block';
