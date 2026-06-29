@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request Time Off — The Durham</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --border: #E0DBD3;
+    --text: #1A1714;
+    --text-muted: #7A746C;
+    --accent: #2D5A4B;
+    --accent-light: #E8F0ED;
+    --warn: #B85C2C;
+    --warn-light: #FBF0EB;
+    --sans: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 60px;
+  }
+
+  .wordmark {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .card-header { margin-bottom: 28px; }
+  .card-header h1 { font-size: 20px; font-weight: 600; }
+  .card-header p { font-size: 13px; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+
+  .field { margin-bottom: 18px; }
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  input, select, textarea {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 15px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 11px 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); background: #fff; }
+  textarea { resize: vertical; min-height: 90px; }
+
+  .date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .conflict-notice {
+    display: none;
+    background: var(--warn-light);
+    border: 1px solid #E8C4AF;
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--warn);
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+
+  .btn {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    background: var(--accent);
+    color: #fff;
+    transition: opacity 0.15s;
+    margin-top: 6px;
+  }
+  .btn:hover { opacity: 0.88; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* SUCCESS STATE */
+  .success {
+    display: none;
+    text-align: center;
+    padding: 20px 0 8px;
+  }
+  .success .check {
+    width: 52px; height: 52px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 22px;
+  }
+  .success h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .success p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .success .another {
+    display: inline-block;
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .spinner {
+    display: none;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    display: none;
+    color: var(--warn);
+    font-size: 12px;
+    margin-top: 10px;
+    text-align: center;
+    font-family: var(--mono);
+  }
+</style>
+</head>
+<body>
+
+<div class="wordmark">The Durham Hotel · Front Office</div>
+
+<div class="card">
+  <div id="form-view">
+    <div class="card-header">
+      <h1>Request Time Off</h1>
+      <p>Fill out this form to submit your request. You'll hear back from Eli once it's reviewed.</p>
+    </div>
+
+    <div class="field">
+      <label>Your Name</label>
+      <select id="f-name">
+        <option value="">Select your name</option>
+        <option>Gary</option>
+        <option>Remy</option>
+        <option>Jasmine</option>
+        <option>Lashonda</option>
+        <option>Mason</option>
+        <option>Tyler</option>
+        <option>Rodney</option>
+        <option>Julius</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Dates Requested</label>
+      <div class="date-row">
+        <input type="date" id="f-start" placeholder="Start">
+        <input type="date" id="f-end" placeholder="End">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Type of Leave</label>
+      <select id="f-type">
+        <option>PTO</option>
+        <option>Sick</option>
+        <option>Unpaid</option>
+        <option>Bereavement</option>
+        <option>Personal</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea id="f-notes" placeholder="Anything Eli should know..."></textarea>
+    </div>
+
+    <div class="conflict-notice" id="conflict-notice">
+      ⚠ These dates overlap with a blackout period. Your request will still be submitted, but approval is unlikely. Consider choosing different dates or speaking with Eli first.
+    </div>
+
+    <button class="btn" id="submit-btn" onclick="submitRequest()">
+      <span id="btn-label">Submit Request</span>
+      <div class="spinner" id="spinner"></div>
+    </button>
+    <div class="error-msg" id="error-msg">Something went wrong. Please try again or let Eli know directly.</div>
+  </div>
+
+  <div class="success" id="success-view">
+    <div class="check">✓</div>
+    <h2>Request Submitted</h2>
+    <p>Your request has been sent. Eli will review it and follow up with you directly.</p>
+    <p class="another" onclick="resetForm()">Submit another request</p>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ── update this to match your Worker URL
+  const WORKER_URL = 'https://durham-proxy.qrselith.workers.dev';
+
+  // Check for blackout conflicts on date change
+  async function checkConflict() {
+    const start = document.getElementById('f-start').value;
+    const end = document.getElementById('f-end').value;
+    const notice = document.getElementById('conflict-notice');
+    if (!start || !end) { notice.style.display = 'none'; return; }
+
+    try {
+      const res = await fetch(`${WORKER_URL}/timeoff/blackouts`);
+      const data = await res.json();
+      const conflict = (data.blackouts || []).some(b =>
+        start <= b.end && end >= b.start
+      );
+      notice.style.display = conflict ? 'block' : 'none';
+    } catch(e) {
+      notice.style.display = 'none';
+    }
+  }
+
+  document.getElementById('f-start').addEventListener('change', checkConflict);
+  document.getElementById('f-end').addEventListener('change', checkConflict);
+
+  async function submitRequest() {
+    const name = document.getElementById('f-name').value;
+    const start = document.getElementById('f-start').value;
+    const end = document.getElementById('f-end').value;
+    const type = document.getElementById('f-type').value;
+    const notes = document.getElementById('f-notes').value;
+
+    if (!name) { alert('Please select your name.'); return; }
+    if (!start || !end) { alert('Please select your dates.'); return; }
+    if (end < start) { alert('End date must be on or after start date.'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    const label = document.getElementById('btn-label');
+    const spinner = document.getElementById('spinner');
+    const errMsg = document.getElementById('error-msg');
+
+    btn.disabled = true;
+    label.style.display = 'none';
+    spinner.style.display = 'block';
+    errMsg.style.display = 'none';
+
+    const payload = {
+      id: Date.now(),
+      name, start, end, type,
+      notes: notes || '',
+      source: 'Staff Form',
+      received: new Date().toISOString().split('T')[0],
+      status: 'Pending',
+      denialReason: '',
+      loggedAt: new Date().toISOString()
+    };
+
+    try {
+      const res = await fetch(`${WORKER_URL}/timeoff/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error('Server error');
+
+      // Open mailto alert for Eli
+      const dateRange = start === end ? formatDate(start) : `${formatDate(start)} – ${formatDate(end)}`;
+      const subject = `[Time Off Request] ${name} — ${dateRange}`;
+      const body = `New time off request submitted via the staff form.\n\nAssociate: ${name}\nDates: ${dateRange}\nType: ${type}\nNotes: ${notes || 'None'}\n\nOpen the manager dashboard to approve or deny:\nhttps://qrselith-bot.github.io/durham-tools/timeoff-manager.html`;
+      window.location.href = `mailto:eli@thedurhamhotel.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      document.getElementById('form-view').style.display = 'none';
+      document.getElementById('success-view').style.display = 'block';
+    } catch(e) {
+      btn.disabled = false;
+      label.style.display = 'block';
+      spinner.style.display = 'none';
+      errMsg.style.display = 'block';
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('f-name').selectedIndex = 0;
+    document.getElementById('f-start').value = '';
+    document.getElementById('f-end').value = '';
+    document.getElementById('f-type').selectedIndex = 0;
+    document.getElementById('f-notes').value = '';
+    document.getElementById('conflict-notice').style.display = 'none';
+    document.getElementById('form-view').style.display = 'block';
+    document.getElementById('success-view').style.display = 'none';
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('btn-label').style.display = 'block';
+    document.getElementById('spinner').style.display = 'none';
+  }
+
+  function formatDate(ds) {
+    const [y, m, d] = ds.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[parseInt(m)-1]} ${parseInt(d)}, ${y}`;
+  }
+</script>
+</body>
+</html>
