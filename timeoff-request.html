@@ -304,7 +304,7 @@
       // Open mailto alert for Eli
       const dateRange = start === end ? formatDate(start) : `${formatDate(start)} – ${formatDate(end)}`;
       const subject = `[Time Off Request] ${name} — ${dateRange}`;
-      const body = `New time off request submitted via the staff form.\n\nAssociate: ${name}\nDates: ${dateRange}\nType: ${type}\nNotes: ${notes || 'None'}\n\nOpen the manager dashboard to approve or deny:\nhttps://qrselith-bot.github.io/durham-tools/timeoff-manager.html`;
+      const body = `New time off request submitted via the staff form.\n\nAssociate: ${name}\nDates: ${dateRange}\nType: ${type}\nNotes: ${notes || 'None'}\n\n\nhttps://qrselith-bot.github.io/durham-tools/timeoff-manager.html`;
       window.location.href = `mailto:ethompson@thedurham.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
       document.getElementById('form-view').style.display = 'none';
