@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Durham — Front Office Repository</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAF8F4;
+    --surface: #FFFFFF;
+    --ink: #2B2926;
+    --muted: #8C8579;
+    --accent: #6E7C6E;
+    --accent-soft: #E9ECE6;
+    --border: #E6E1D8;
+    --warn: #B0584C;
+    --warn-soft: #F5E8E5;
+    --gold: #A8843E;
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background-color: var(--bg);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%236E7C6E' fill-opacity='0.035'%3E%3Cellipse cx='60' cy='70' rx='10' ry='8'/%3E%3Cellipse cx='49' cy='56' rx='4' ry='5'/%3E%3Cellipse cx='59' cy='51' rx='4' ry='5'/%3E%3Cellipse cx='70' cy='56' rx='4' ry='5'/%3E%3C/g%3E%3C/svg%3E");
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+  .paw-icon { width: 13px; height: 13px; flex-shrink: 0; opacity: 0.55; }
+  .paw-icon ellipse { fill: var(--accent); }
+  h2 { display: flex; align-items: center; gap: 6px; }
+  .whisker {
+    display: block;
+    width: 64px;
+    height: 10px;
+    margin: 6px 0 16px 0;
+  }
+  .whisker path { stroke: var(--accent); stroke-width: 1.4; fill: none; }
+  .whisker circle { fill: var(--accent); }
+
+  header {
+    padding: 22px 28px 18px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    background: var(--surface);
+  }
+  header .title-row { display: flex; align-items: center; gap: 11px; }
+  .cat-mark { width: 30px; height: 30px; flex-shrink: 0; }
+  .cat-mark path { stroke: var(--ink); stroke-width: 1.4; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+  .cat-mark circle { fill: var(--ink); }
+  header .title-block h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 21px;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  header .title-block .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: var(--font-mono);
+  }
+  nav.tabs { display: flex; gap: 4px; }
+  nav.tabs button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 16px;
+    font-size: 12.5px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  nav.tabs button.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  #connStatus { font-size: 10.5px; color: var(--muted); font-family: var(--font-mono); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.9fr 1fr;
+    gap: 18px;
+    padding: 22px 28px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 920px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .panel h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 16px;
+    margin: 0;
+  }
+
+  /* --- Capture --- */
+  .capture-row { display: flex; gap: 8px; margin-bottom: 4px; }
+  .capture-row input[type="text"] {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-family: var(--font-body);
+    background: var(--bg);
+  }
+  .capture-row input[type="text"]:focus { outline: 1.5px solid var(--accent); }
+  button.primary {
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  button.primary:hover { background: var(--accent); }
+  .toggle-structured {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 11.5px;
+    cursor: pointer;
+    padding: 6px 2px 14px 2px;
+    text-decoration: underline;
+  }
+  .structured-fields {
+    display: none;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .structured-fields.show { display: flex; }
+  .structured-fields select {
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  /* --- Search/filter --- */
+  .search-row {
+    display: flex;
+    gap: 8px;
+    margin: 14px 0 10px 0;
+  }
+  .search-row input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12.5px;
+    background: var(--bg);
+  }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filters button {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: none;
+    border-radius: 5px;
+    padding: 5px 11px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .filters button.active { background: var(--accent); color: #fff; }
+
+  /* --- Entries --- */
+  .entry {
+    display: flex;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .entry:last-child { border-bottom: none; }
+  .entry input[type="checkbox"] { margin-top: 4px; }
+  .entry-body { flex: 1; }
+  .entry-text { font-size: 13.5px; line-height: 1.5; }
+  .entry.resolved .entry-text { color: var(--muted); text-decoration: line-through; }
+  .entry-meta { display: flex; gap: 7px; align-items: center; margin-top: 5px; flex-wrap: wrap; }
+  .pill {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    padding: 2px 8px;
+    border-radius: 9px;
+    font-weight: 500;
+  }
+  .pill.cat-scheduling { background: #E3EDF7; color: #2B5A8C; }
+  .pill.cat-guest { background: #F7E9E3; color: #A85A2B; }
+  .pill.cat-admin { background: #ECE3F7; color: #6A3BA8; }
+  .pill.cat-finance { background: #E3F7E8; color: #2B8C4A; }
+  .pill.cat-decision { background: #FBF0DA; color: var(--gold); }
+  .pill.cat-other { background: #F0EEEA; color: #7A7268; }
+  .pill.status { background: var(--accent-soft); color: var(--accent); }
+  .pill.status.open { background: var(--warn-soft); color: var(--warn); }
+  .timestamp { font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+  .entry-actions { display: flex; gap: 4px; }
+  .entry-actions button {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 13px; padding: 2px 5px;
+  }
+  .empty-state { color: var(--muted); font-size: 12.5px; text-align: center; padding: 26px 0; font-family: var(--font-mono); }
+
+  .selection-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: 9px 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .selection-bar.show { display: flex; }
+  .selection-bar button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    cursor: pointer;
+  }
+  .selection-bar .clear-sel { background: none; color: var(--muted); text-decoration: underline; }
+
+  /* --- Chat panel --- */
+  .chat-panel { display: flex; flex-direction: column; height: 660px; }
+  .chat-head-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .chat-head-actions { display: flex; gap: 6px; }
+  .chat-head-actions button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .pin-tray {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 8px 0 12px 0;
+    min-height: 0;
+  }
+  .pin-card {
+    background: var(--accent-soft);
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+  }
+  .pin-card span.txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pin-card button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; }
+
+  .chat-log {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-right: 2px;
+    position: relative;
+  }
+  .walking-cat {
+    position: absolute;
+    bottom: 6px;
+    left: -60px;
+    width: 48px;
+    height: 32px;
+    pointer-events: none;
+    animation: catWalk 4s linear forwards;
+    z-index: 10;
+  }
+  .walking-cat svg { width: 100%; height: 100%; }
+  .walking-cat .leg { transform-origin: top center; animation: legSwing 0.28s ease-in-out infinite alternate; }
+  .walking-cat .leg-r { animation: legSwingR 0.28s ease-in-out infinite alternate; }
+  .walking-cat .tail { transform-origin: 80% 50%; animation: tailSwish 0.6s ease-in-out infinite alternate; }
+  @keyframes catWalk {
+    0%   { left: -60px; }
+    100% { left: calc(100% + 60px); }
+  }
+  @keyframes legSwing {
+    from { transform: rotate(-18deg); }
+    to   { transform: rotate(18deg); }
+  }
+  @keyframes legSwingR {
+    from { transform: rotate(18deg); }
+    to   { transform: rotate(-18deg); }
+  }
+  @keyframes tailSwish {
+    from { transform: rotate(-20deg); }
+    to   { transform: rotate(20deg); }
+  }
+  .msg { padding: 12px 15px; border-radius: 8px; font-size: 13.5px; line-height: 1.6; max-width: 90%; }
+  .msg.user { background: var(--ink); color: #fff; align-self: flex-end; }
+  .msg.assistant {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .msg.assistant p { margin: 0 0 8px 0; }
+  .msg.assistant p:last-child { margin-bottom: 0; }
+  .msg.assistant strong { font-weight: 600; color: var(--ink); }
+  .msg.assistant em { font-style: italic; }
+  .msg.assistant ul, .msg.assistant ol { margin: 6px 0 8px 0; padding-left: 18px; }
+  .msg.assistant li { margin-bottom: 4px; }
+  .msg.assistant hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+  .msg.assistant h3 { font-family: var(--font-display); font-size: 14px; font-weight: 500; margin: 10px 0 4px 0; }
+  .msg.assistant code { font-family: var(--font-mono); font-size: 12px; background: var(--bg); padding: 1px 5px; border-radius: 3px; }
+  .msg.assistant blockquote { border-left: 2px solid var(--accent); padding-left: 10px; color: var(--muted); margin: 6px 0; }
+  .msg.system { background: none; color: var(--muted); font-size: 11.5px; align-self: center; font-family: var(--font-mono); }
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input-row textarea {
+    flex: 1; resize: none; padding: 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 13px; font-family: var(--font-body); height: 46px; background: var(--bg);
+  }
+
+  /* --- Archive view --- */
+  #archiveView { display: none; }
+  #archiveView.show { display: block; }
+  #mainView.hide { display: none; }
+  .archive-item {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+  }
+  .archive-item:last-child { border-bottom: none; }
+  .archive-item-head { display: flex; justify-content: space-between; align-items: center; }
+  .archive-item-head .timestamp { font-size: 11px; }
+  .archive-snippet { font-size: 12.5px; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+  .archive-pinned { font-size: 10.5px; color: var(--accent); margin-top: 6px; font-family: var(--font-mono); }
+  .reopen-btn {
+    background: var(--accent-soft); color: var(--accent); border: none; border-radius: 5px;
+    padding: 5px 11px; font-size: 11px; cursor: pointer;
+  }
+
+  /* --- Digest modal --- */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(43,41,38,0.4);
+    align-items: center; justify-content: center; z-index: 50;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 10px; padding: 26px;
+    max-width: 560px; width: 90%; max-height: 80vh; overflow-y: auto;
+  }
+  .modal h2 { margin-top: 0; }
+  .modal-close { float: right; background: none; border: none; font-size: 18px; cursor: pointer; color: var(--muted); }
+  .modal-body { font-size: 13.5px; line-height: 1.65; white-space: pre-wrap; }
+  .small-note { font-size: 10.5px; color: var(--muted); margin-top: 12px; font-family: var(--font-mono); }
+
+  /* Responsibilities panel */
+  .resp-tabs { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
+  .resp-tab {
+    background: var(--accent-soft); color: var(--accent); border: none;
+    border-radius: 5px; padding: 5px 12px; font-size: 11.5px; font-weight: 500; cursor: pointer;
+  }
+  .resp-tab.active { background: var(--accent); color: #fff; }
+  .resp-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+  }
+  .resp-item:last-child { border-bottom: none; }
+  .resp-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
+  .resp-item-text { flex: 1; font-size: 13px; line-height: 1.45; }
+  .resp-item-text.editing {
+    border: none; outline: 1px solid var(--accent); border-radius: 4px;
+    padding: 2px 5px; font-size: 13px; font-family: var(--font-body); width: 100%; background: var(--bg);
+  }
+  .resp-item-actions button {
+    background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 1px 4px;
+  }
+  .resp-add-row { display: flex; gap: 6px; margin-top: 12px; }
+  .resp-add-row input {
+    flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; background: var(--bg); font-family: var(--font-body);
+  }
+  .resp-send-bar {
+    display: none; align-items: center; justify-content: space-between;
+    background: var(--accent-soft); border-radius: 6px; padding: 8px 12px;
+    margin-bottom: 10px; font-size: 12px;
+  }
+  .resp-send-bar.show { display: flex; }
+  .resp-send-bar button { background: var(--accent); color: #fff; border: none; border-radius: 5px; padding: 5px 12px; font-size: 11.5px; cursor: pointer; }
+  .resp-send-bar .clear-sel { background: none; color: var(--muted); text-decoration: underline; margin-right: 6px; }
+  .about-toggle { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; text-decoration: underline; padding: 0 0 8px 0; display: block; }
+  .about-drawer { display: none; margin-bottom: 10px; }
+  .about-drawer.show { display: block; }
+  .about-drawer textarea {
+    width: 100%; resize: vertical; min-height: 72px; padding: 9px;
+    border: 1px solid var(--border); border-radius: 6px; font-size: 12.5px;
+    font-family: var(--font-body); background: var(--bg); line-height: 1.5;
+  }
+  .about-save-row { display: flex; justify-content: flex-end; margin-top: 5px; }
+  .about-save-row button { padding: 5px 13px; font-size: 12px; }
+
+  /* Tone toggle */
+  .tone-row { display: flex; gap: 5px; margin-bottom: 10px; }
+  .tone-btn {
+    background: var(--accent-soft); color: var(--accent); border: none;
+    border-radius: 5px; padding: 5px 11px; font-size: 11px; font-weight: 500; cursor: pointer;
+  }
+  .tone-btn.active { background: var(--accent); color: #fff; }
+
+  /* Quick prompts */
+  .quick-prompts { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .qp-chip {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
+    padding: 5px 11px; font-size: 11.5px; color: var(--muted); cursor: pointer;
+    white-space: nowrap; transition: border-color 0.15s;
+  }
+  .qp-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Response actions */
+  .msg-actions { display: flex; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .msg-action-btn {
+    background: none; border: none; color: var(--muted); font-size: 11px;
+    cursor: pointer; padding: 0; font-family: var(--font-body);
+  }
+  .msg-action-btn:hover { color: var(--accent); }
+
+  /* Follow-up chips */
+  .followup-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; align-self: flex-start; }
+  .followup-chip {
+    background: var(--accent-soft); color: var(--accent); border: none;
+    border-radius: 14px; padding: 5px 12px; font-size: 11.5px; cursor: pointer;
+  }
+  .followup-chip:hover { background: var(--accent); color: #fff; }
+</style>
+</head>
+<body>
+
+<div id="pinGate" style="position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:32px 36px;text-align:center;max-width:280px;">
+    <svg class="cat-mark" viewBox="0 0 32 32" style="margin:0 auto 10px auto;display:block;">
+      <path d="M8 12 L7 5 L12 10 Z"/><path d="M24 12 L25 5 L20 10 Z"/>
+      <path d="M9 11 Q 16 7, 23 11 Q 25 16, 22 21 Q 16 25, 10 21 Q 7 16, 9 11 Z"/>
+      <circle cx="13" cy="16" r="0.9"/><circle cx="19" cy="16" r="0.9"/>
+      <path d="M14.5 19 Q 16 20.3, 17.5 19"/>
+      <path d="M12 17.5 L6 16.5 M12 18.5 L6 19 M20 17.5 L26 16.5 M20 18.5 L26 19"/>
+    </svg>
+    <div style="font-family:var(--font-display);font-size:16px;margin-bottom:14px;">Enter passcode</div>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="8" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:15px;text-align:center;font-family:var(--font-mono);margin-bottom:10px;">
+    <button class="primary" id="pinSubmit" style="width:100%;">Unlock</button>
+    <div id="pinError" style="color:var(--warn);font-size:11.5px;margin-top:8px;display:none;">Incorrect passcode.</div>
+  </div>
+</div>
+
+<script>
+  const DASH_PIN = "1124";
+  const pinGate = document.getElementById("pinGate");
+  const pinInput = document.getElementById("pinInput");
+  const pinError = document.getElementById("pinError");
+
+  function tryUnlock() {
+    if (pinInput.value === DASH_PIN) {
+      sessionStorage.setItem("durham_repo_unlocked", "1");
+      pinGate.style.display = "none";
+    } else {
+      pinError.style.display = "block";
+      pinInput.value = "";
+    }
+  }
+  document.getElementById("pinSubmit").addEventListener("click", tryUnlock);
+  pinInput.addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+
+  if (sessionStorage.getItem("durham_repo_unlocked") === "1") {
+    pinGate.style.display = "none";
+  } else {
+    setTimeout(() => pinInput.focus(), 50);
+  }
+</script>
+
+
+<header>
+  <div class="title-row">
+    <svg class="cat-mark" viewBox="0 0 32 32">
+      <path d="M8 12 L7 5 L12 10 Z"/>
+      <path d="M24 12 L25 5 L20 10 Z"/>
+      <path d="M9 11 Q 16 7, 23 11 Q 25 16, 22 21 Q 16 25, 10 21 Q 7 16, 9 11 Z"/>
+      <circle cx="13" cy="16" r="0.9"/>
+      <circle cx="19" cy="16" r="0.9"/>
+      <path d="M14.5 19 Q 16 20.3, 17.5 19"/>
+      <path d="M12 17.5 L6 16.5 M12 18.5 L6 19 M20 17.5 L26 16.5 M20 18.5 L26 19"/>
+    </svg>
+    <div class="title-block">
+      <h1>Front Office Repository</h1>
+      <div class="sub" id="connStatus">connecting…</div>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="active" data-tab="main">Repository</button>
+    <button data-tab="archive">Archive</button>
+  </nav>
+</header>
+
+<div id="mainView" class="layout">
+
+  <!-- ENTRIES PANEL -->
+  <div class="panel">
+    <h2><svg class="paw-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="6" ry="5"/><ellipse cx="6.5" cy="9" rx="2.4" ry="3"/><ellipse cx="11.5" cy="6.5" rx="2.4" ry="3"/><ellipse cx="16.5" cy="9" rx="2.4" ry="3"/></svg>Log</h2>
+    <svg class="whisker" viewBox="0 0 64 10"><path d="M2 8 Q 20 -2, 62 6"/><circle cx="2" cy="8" r="1.6"/><circle cx="62" cy="6" r="1.6"/></svg>
+
+    <div class="capture-row">
+      <input type="text" id="entryInput" placeholder="Quick note, gripe, decision, anything on your mind…">
+      <button class="primary" id="addEntryBtn">Add</button>
+    </div>
+    <button class="toggle-structured" id="toggleStructured">+ add category / priority / status</button>
+    <div class="structured-fields" id="structuredFields">
+      <select id="entryCategory">
+        <option value="scheduling">Scheduling</option>
+        <option value="guest">Guest Comms</option>
+        <option value="admin">Admin</option>
+        <option value="finance">Finance</option>
+        <option value="decision">Decision</option>
+        <option value="other">Other</option>
+      </select>
+      <select id="entryStatus">
+        <option value="open">Open</option>
+        <option value="in-progress">In progress</option>
+        <option value="resolved">Resolved</option>
+        <option value="logged">Just logged</option>
+      </select>
+      <select id="entryPriority">
+        <option value="med">Med priority</option>
+        <option value="high">High priority</option>
+        <option value="low">Low priority</option>
+      </select>
+    </div>
+
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Search entries…">
+    </div>
+    <div class="filters" id="filterRow">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="open">Open</button>
+      <button data-filter="scheduling">Scheduling</button>
+      <button data-filter="guest">Guest</button>
+      <button data-filter="admin">Admin</button>
+      <button data-filter="finance">Finance</button>
+      <button data-filter="decision">Decisions</button>
+    </div>
+
+    <div class="selection-bar" id="selectionBar">
+      <span id="selectionCount">0 selected</span>
+      <div>
+        <button class="clear-sel" id="clearSelBtn">clear</button>
+        <button id="sendToAssistantBtn">Send to Assistant →</button>
+      </div>
+    </div>
+
+    <div id="entryList"></div>
+  </div>
+
+  <!-- RESPONSIBILITIES PANEL -->
+  <div class="panel">
+    <h2><svg class="paw-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="6" ry="5"/><ellipse cx="6.5" cy="9" rx="2.4" ry="3"/><ellipse cx="11.5" cy="6.5" rx="2.4" ry="3"/><ellipse cx="16.5" cy="9" rx="2.4" ry="3"/></svg>Responsibilities</h2>
+    <svg class="whisker" viewBox="0 0 64 10"><path d="M2 8 Q 20 -2, 62 6"/><circle cx="2" cy="8" r="1.6"/><circle cx="62" cy="6" r="1.6"/></svg>
+
+    <div class="resp-tabs" id="respTabs">
+      <button class="resp-tab active" data-period="daily">Daily</button>
+      <button class="resp-tab" data-period="weekly">Weekly</button>
+      <button class="resp-tab" data-period="monthly">Monthly</button>
+      <button class="resp-tab" data-period="asneeded">As-needed</button>
+    </div>
+
+    <div class="resp-send-bar" id="respSendBar">
+      <span id="respSelCount">0 selected</span>
+      <div>
+        <button class="clear-sel" id="respClearBtn">clear</button>
+        <button id="respSendBtn">Send to Assistant →</button>
+      </div>
+    </div>
+
+    <div id="respList"></div>
+
+    <div class="resp-add-row">
+      <input type="text" id="respInput" placeholder="Add a responsibility…">
+      <button class="primary" id="respAddBtn">Add</button>
+    </div>
+    <div class="small-note">Select items to discuss them with the assistant.</div>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div class="panel chat-panel">
+    <div class="chat-head-row">
+      <h2><svg class="paw-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="6" ry="5"/><ellipse cx="6.5" cy="9" rx="2.4" ry="3"/><ellipse cx="11.5" cy="6.5" rx="2.4" ry="3"/><ellipse cx="16.5" cy="9" rx="2.4" ry="3"/></svg>Talk it Through</h2>
+      <div class="chat-head-actions">
+        <button id="newChatBtn">New chat</button>
+        <button id="digestBtn">Weekly digest</button>
+        <button id="archiveChatBtn">Archive chat</button>
+        <button id="deleteChatBtn" style="color:var(--warn);border-color:var(--warn-soft);">Delete chat</button>
+      </div>
+    </div>
+    <svg class="whisker" viewBox="0 0 64 10"><path d="M2 8 Q 20 -2, 62 6"/><circle cx="2" cy="8" r="1.6"/><circle cx="62" cy="6" r="1.6"/></svg>
+
+    <div class="pin-tray" id="pinTray"></div>
+
+    <!-- About me context -->
+    <button class="about-toggle" id="aboutToggle">⚙ set context about you (injected into every chat)</button>
+    <div class="about-drawer" id="aboutDrawer">
+      <textarea id="aboutText" placeholder="e.g. My name is Eli. I'm the Front Office Manager at The Durham Hotel. My team: Gary, Remy, Jasmine, Lashonda, Mason, Tyler, Rodney, Julius. I use ADP for PTO. I prefer direct, concise answers."></textarea>
+      <div class="about-save-row"><button class="primary" id="aboutSave">Save context</button></div>
+    </div>
+
+    <!-- Tone toggle -->
+    <div class="tone-row">
+      <span style="font-size:11px;color:var(--muted);align-self:center;margin-right:2px;">Tone:</span>
+      <button class="tone-btn active" data-tone="advisor">Advisor</button>
+      <button class="tone-btn" data-tone="concise">Concise</button>
+      <button class="tone-btn" data-tone="draft">Draft</button>
+    </div>
+
+    <!-- Quick prompts -->
+    <div class="quick-prompts" id="quickPrompts">
+      <button class="qp-chip">What's still open this week?</button>
+      <button class="qp-chip">Help me draft a guest email</button>
+      <button class="qp-chip">What patterns do you see?</button>
+      <button class="qp-chip">Summarize what I've logged</button>
+      <button class="qp-chip">What should I prioritize today?</button>
+    </div>
+
+    <div class="chat-log" id="chatLog">
+      <div class="msg system">Pin entries from the log, or just ask a question.</div>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="chatInput" placeholder="Ask, vent, think out loud…"></textarea>
+      <button class="primary" id="sendChatBtn">Send</button>
+    </div>
+    <div class="small-note">Unarchived chats clear automatically after 24 hours.</div>
+  </div>
+
+</div>
+
+<div id="archiveView">
+  <div class="layout" style="grid-template-columns: 1fr;">
+    <div class="panel">
+      <h2><svg class="paw-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="6" ry="5"/><ellipse cx="6.5" cy="9" rx="2.4" ry="3"/><ellipse cx="11.5" cy="6.5" rx="2.4" ry="3"/><ellipse cx="16.5" cy="9" rx="2.4" ry="3"/></svg>Archive</h2>
+      <svg class="whisker" viewBox="0 0 64 10"><path d="M2 8 Q 20 -2, 62 6"/><circle cx="2" cy="8" r="1.6"/><circle cx="62" cy="6" r="1.6"/></svg>
+      <div class="search-row"><input type="text" id="archiveSearch" placeholder="Search archived chats…"></div>
+      <div id="archiveList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="digestBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="digestClose">×</button>
+    <h2><svg class="paw-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="6" ry="5"/><ellipse cx="6.5" cy="9" rx="2.4" ry="3"/><ellipse cx="11.5" cy="6.5" rx="2.4" ry="3"/><ellipse cx="16.5" cy="9" rx="2.4" ry="3"/></svg>This Week's Digest</h2>
+    <svg class="whisker" viewBox="0 0 64 10"><path d="M2 8 Q 20 -2, 62 6"/><circle cx="2" cy="8" r="1.6"/><circle cx="62" cy="6" r="1.6"/></svg>
+    <div class="modal-body" id="digestBody">Loading…</div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = "https://durham-proxy.qrselith.workers.dev";
+const ENTRIES_ENDPOINT = WORKER_URL + "/api/repo/entries";
+const CHAT_ENDPOINT = WORKER_URL + "/api/repo/chat";
+const ARCHIVE_ENDPOINT = WORKER_URL + "/api/repo/archive";
+const SESSION_ENDPOINT = WORKER_URL + "/api/repo/session";
+const ABOUT_ENDPOINT = WORKER_URL + "/api/repo/about";
+
+let entries = [];
+let selectedIds = new Set();
+let pinned = [];
+let chatMessages = [];
+let currentFilter = "all";
+let currentSearch = "";
+let sessionId = null;
+let currentTone = "advisor";
+let aboutContext = "";
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str; return d.innerHTML; }
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+/* ---------- About me context ---------- */
+async function loadAbout() {
+  try {
+    const res = await fetch(ABOUT_ENDPOINT);
+    const data = await res.json();
+    aboutContext = data.about || "";
+    document.getElementById("aboutText").value = aboutContext;
+  } catch (e) { /* non-critical */ }
+}
+
+document.getElementById("aboutToggle").addEventListener("click", () => {
+  document.getElementById("aboutDrawer").classList.toggle("show");
+});
+document.getElementById("aboutSave").addEventListener("click", async () => {
+  const text = document.getElementById("aboutText").value.trim();
+  aboutContext = text;
+  try {
+    await fetch(ABOUT_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ about: text })
+    });
+    document.getElementById("aboutDrawer").classList.remove("show");
+    addMsg("system", "Context saved — I'll keep this in mind every session.");
+  } catch (e) {
+    addMsg("system", "Couldn't save context — check worker connection.");
+  }
+});
+
+/* ---------- Tone toggle ---------- */
+document.querySelectorAll(".tone-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tone-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentTone = btn.dataset.tone;
+    const labels = { advisor: "Advisor mode — full responses.", concise: "Concise mode — bullet points only.", draft: "Draft mode — ready-to-send output." };
+    addMsg("system", labels[currentTone]);
+  });
+});
+
+/* ---------- Quick prompts ---------- */
+document.getElementById("quickPrompts").addEventListener("click", e => {
+  if (e.target.classList.contains("qp-chip")) {
+    document.getElementById("chatInput").value = e.target.textContent;
+    document.getElementById("chatInput").focus();
+  }
+});
+
+/* ---------- Entries ---------- */
+async function loadEntries() {
+  try {
+    const res = await fetch(ENTRIES_ENDPOINT);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    entries = data.entries || [];
+    document.getElementById("connStatus").textContent = "synced";
+    renderEntries();
+  } catch (e) {
+    document.getElementById("connStatus").textContent = "offline — check worker connection";
+  }
+}
+
+async function saveEntries() {
+  try {
+    await fetch(ENTRIES_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entries })
+    });
+    document.getElementById("connStatus").textContent = "synced";
+  } catch (e) {
+    document.getElementById("connStatus").textContent = "save failed";
+  }
+}
+
+function renderEntries() {
+  let visible = entries;
+  if (currentFilter === "open") visible = visible.filter(e => e.status === "open" || e.status === "in-progress");
+  else if (currentFilter !== "all") visible = visible.filter(e => e.category === currentFilter);
+  if (currentSearch.trim()) {
+    const q = currentSearch.toLowerCase();
+    visible = visible.filter(e => e.text.toLowerCase().includes(q));
+  }
+  visible = [...visible].sort((a, b) => b.created - a.created);
+
+  const list = document.getElementById("entryList");
+  if (visible.length === 0) {
+    list.innerHTML = `<div class="empty-state"><svg width="40" height="20" viewBox="0 0 40 20" style="opacity:0.4;margin-bottom:6px;"><path d="M4 4 Q 4 18, 18 18 Q 32 18, 32 8 Q 32 2, 26 4" stroke="var(--accent)" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg><br>Quiet so far. Log the first thing on your mind.</div>`;
+    return;
+  }
+
+  list.innerHTML = visible.map(e => `
+    <div class="entry ${e.status === 'resolved' ? 'resolved' : ''}" data-id="${e.id}">
+      <input type="checkbox" ${selectedIds.has(e.id) ? "checked" : ""} onchange="toggleSelect('${e.id}')">
+      <div class="entry-body">
+        <div class="entry-text">${escapeHtml(e.text)}</div>
+        <div class="entry-meta">
+          <span class="pill cat-${e.category}">${e.category}</span>
+          <span class="pill status ${e.status === 'open' ? 'open' : ''}">${e.status.replace('-', ' ')}</span>
+          <span class="timestamp">${fmtTime(e.created)}</span>
+        </div>
+      </div>
+      <div class="entry-actions">
+        ${e.status !== 'resolved' ? `<button onclick="resolveEntry('${e.id}')" title="Mark resolved">✓</button>` : `<button onclick="archiveEntry('${e.id}')" title="Save to archive" style="color:var(--accent)">⬆</button>`}
+        <button onclick="deleteEntry('${e.id}')" title="Delete">✕</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+window.toggleSelect = function(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+  updateSelectionBar();
+};
+window.resolveEntry = function(id) {
+  const e = entries.find(e => e.id === id);
+  if (e) { e.status = "resolved"; renderEntries(); saveEntries(); }
+};
+window.deleteEntry = function(id) {
+  entries = entries.filter(e => e.id !== id);
+  selectedIds.delete(id);
+  renderEntries(); updateSelectionBar(); saveEntries();
+};
+window.archiveEntry = async function(id) {
+  const e = entries.find(e => e.id === id);
+  if (!e) return;
+  try {
+    await fetch(ARCHIVE_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: "entry-" + e.id,
+        messages: [
+          { role: "user", text: "[Resolved entry saved to archive]" },
+          { role: "assistant", text: `**${e.category} / ${e.status}**\n\n${e.text}\n\n*Logged: ${fmtTime(e.created)}*` }
+        ],
+        pinned: [],
+        archivedAt: Date.now(),
+        isEntry: true,
+        entryText: e.text
+      })
+    });
+    entries = entries.filter(en => en.id !== id);
+    renderEntries(); saveEntries();
+    addMsg("system", "Entry saved to archive.");
+  } catch (err) {
+    addMsg("system", "Couldn't archive — check worker connection.");
+  }
+};
+
+/* ---------- Responsibilities ---------- */
+const RESP_ENDPOINT = WORKER_URL + "/api/repo/responsibilities";
+let responsibilities = {};
+let currentPeriod = "daily";
+let selectedResps = new Set();
+
+async function loadResponsibilities() {
+  try {
+    const res = await fetch(RESP_ENDPOINT);
+    const data = await res.json();
+    responsibilities = data.responsibilities || { daily: [], weekly: [], monthly: [], asneeded: [] };
+    renderResps();
+  } catch (e) { responsibilities = { daily: [], weekly: [], monthly: [], asneeded: [] }; renderResps(); }
+}
+
+async function saveResponsibilities() {
+  try {
+    await fetch(RESP_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ responsibilities })
+    });
+  } catch (e) { /* non-critical */ }
+}
+
+function renderResps() {
+  const list = document.getElementById("respList");
+  const items = responsibilities[currentPeriod] || [];
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:16px 0">No ${currentPeriod} responsibilities yet.</div>`;
+    return;
+  }
+  list.innerHTML = items.map((r, i) => `
+    <div class="resp-item">
+      <input type="checkbox" ${selectedResps.has(currentPeriod + ":" + i) ? "checked" : ""} onchange="toggleResp('${currentPeriod}', ${i})">
+      <span class="resp-item-text" id="resp-text-${currentPeriod}-${i}">${escapeHtml(r)}</span>
+      <div class="resp-item-actions">
+        <button onclick="editResp('${currentPeriod}', ${i})" title="Edit">✎</button>
+        <button onclick="deleteResp('${currentPeriod}', ${i})" title="Delete">✕</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+window.toggleResp = function(period, i) {
+  const key = period + ":" + i;
+  if (selectedResps.has(key)) selectedResps.delete(key); else selectedResps.add(key);
+  updateRespBar();
+};
+
+function updateRespBar() {
+  const bar = document.getElementById("respSendBar");
+  document.getElementById("respSelCount").textContent = `${selectedResps.size} selected`;
+  bar.classList.toggle("show", selectedResps.size > 0);
+}
+
+window.deleteResp = function(period, i) {
+  responsibilities[period].splice(i, 1);
+  selectedResps.clear();
+  renderResps(); updateRespBar(); saveResponsibilities();
+};
+
+window.editResp = function(period, i) {
+  const span = document.getElementById(`resp-text-${period}-${i}`);
+  const current = responsibilities[period][i];
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = current;
+  input.className = "resp-item-text editing";
+  span.replaceWith(input);
+  input.focus();
+  function save() {
+    const val = input.value.trim();
+    if (val) responsibilities[period][i] = val;
+    renderResps(); saveResponsibilities();
+  }
+  input.addEventListener("blur", save);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); save(); } });
+};
+
+document.getElementById("respTabs").addEventListener("click", e => {
+  if (!e.target.dataset.period) return;
+  document.querySelectorAll(".resp-tab").forEach(b => b.classList.remove("active"));
+  e.target.classList.add("active");
+  currentPeriod = e.target.dataset.period;
+  selectedResps.clear();
+  updateRespBar();
+  renderResps();
+});
+
+document.getElementById("respAddBtn").addEventListener("click", addResp);
+document.getElementById("respInput").addEventListener("keydown", e => { if (e.key === "Enter") addResp(); });
+
+function addResp() {
+  const input = document.getElementById("respInput");
+  const text = input.value.trim();
+  if (!text) return;
+  if (!responsibilities[currentPeriod]) responsibilities[currentPeriod] = [];
+  responsibilities[currentPeriod].push(text);
+  input.value = "";
+  renderResps(); saveResponsibilities();
+}
+
+document.getElementById("respClearBtn").addEventListener("click", () => {
+  selectedResps.clear(); renderResps(); updateRespBar();
+});
+
+document.getElementById("respSendBtn").addEventListener("click", () => {
+  const items = [];
+  selectedResps.forEach(key => {
+    const [period, i] = key.split(":");
+    const text = responsibilities[period]?.[parseInt(i)];
+    if (text) items.push({ id: "resp-" + key, text: `[${period}] ${text}`, category: "admin", status: "logged" });
+  });
+  const newPins = items.filter(item => !pinned.find(p => p.id === item.id));
+  pinned.push(...newPins);
+  selectedResps.clear();
+  renderResps(); updateRespBar(); renderPinTray();
+  addMsg("system", `${newPins.length} responsibilit${newPins.length === 1 ? "y" : "ies"} pinned — ready to discuss.`);
+});
+
+function updateSelectionBar() {
+  const bar = document.getElementById("selectionBar");
+  document.getElementById("selectionCount").textContent = `${selectedIds.size} selected`;
+  bar.classList.toggle("show", selectedIds.size > 0);
+}
+
+document.getElementById("clearSelBtn").addEventListener("click", () => {
+  selectedIds.clear(); renderEntries(); updateSelectionBar();
+});
+
+document.getElementById("sendToAssistantBtn").addEventListener("click", () => {
+  const toAdd = entries.filter(e => selectedIds.has(e.id) && !pinned.find(p => p.id === e.id));
+  pinned.push(...toAdd);
+  selectedIds.clear();
+  renderEntries(); updateSelectionBar(); renderPinTray();
+  addMsg("system", `${toAdd.length} entr${toAdd.length === 1 ? "y" : "ies"} pinned to this conversation.`);
+});
+
+function renderPinTray() {
+  const tray = document.getElementById("pinTray");
+  tray.innerHTML = pinned.map(p => `
+    <div class="pin-card">
+      <span class="txt">${escapeHtml(p.text)}</span>
+      <button onclick="unpin('${p.id}')">✕</button>
+    </div>
+  `).join("");
+}
+window.unpin = function(id) {
+  pinned = pinned.filter(p => p.id !== id);
+  renderPinTray();
+};
+
+/* ---------- Capture ---------- */
+document.getElementById("toggleStructured").addEventListener("click", () => {
+  document.getElementById("structuredFields").classList.toggle("show");
+});
+document.getElementById("addEntryBtn").addEventListener("click", addEntry);
+document.getElementById("entryInput").addEventListener("keydown", e => { if (e.key === "Enter") addEntry(); });
+
+function addEntry() {
+  const input = document.getElementById("entryInput");
+  const text = input.value.trim();
+  if (!text) return;
+  const showStructured = document.getElementById("structuredFields").classList.contains("show");
+  const category = showStructured ? document.getElementById("entryCategory").value : "other";
+  const status = showStructured ? document.getElementById("entryStatus").value : "logged";
+  const priority = showStructured ? document.getElementById("entryPriority").value : "med";
+  entries.unshift({ id: uid(), text, category, status, priority, created: Date.now() });
+  input.value = "";
+  renderEntries(); saveEntries();
+}
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  currentSearch = e.target.value; renderEntries();
+});
+document.getElementById("filterRow").addEventListener("click", e => {
+  if (e.target.tagName !== "BUTTON") return;
+  document.querySelectorAll("#filterRow button").forEach(b => b.classList.remove("active"));
+  e.target.classList.add("active");
+  currentFilter = e.target.dataset.filter;
+  renderEntries();
+});
+
+/* ---------- Chat ---------- */
+const chatLog = document.getElementById("chatLog");
+function renderMarkdown(text) {
+  return text
+    // Escape HTML first
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    // Horizontal rules (--- or ***)
+    .replace(/^[-*]{3,}\s*$/gm, "<hr>")
+    // Bold
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    // Italic
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    // Inline code
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    // Unordered list items
+    .replace(/^[-•]\s+(.+)$/gm, "<li>$1</li>")
+    // Wrap consecutive <li> in <ul>
+    .replace(/(<li>.*<\/li>\n?)+/g, m => "<ul>" + m + "</ul>")
+    // Simple h3 (###)
+    .replace(/^###\s+(.+)$/gm, "<h3>$1</h3>")
+    // Blockquote
+    .replace(/^>\s+(.+)$/gm, "<blockquote>$1</blockquote>")
+    // Paragraphs — double newline becomes paragraph break
+    .split(/\n{2,}/).map(p => {
+      p = p.trim();
+      if (!p) return "";
+      if (/^<(ul|ol|hr|h3|blockquote|li)/.test(p)) return p;
+      return "<p>" + p.replace(/\n/g, "<br>") + "</p>";
+    }).join("\n");
+}
+
+function spawnWalkingCat() {
+  const log = document.getElementById("chatLog");
+  const existing = log.querySelector(".walking-cat");
+  if (existing) existing.remove();
+
+  const cat = document.createElement("div");
+  cat.className = "walking-cat";
+  cat.innerHTML = `
+    <svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- body -->
+        <ellipse cx="22" cy="18" rx="10" ry="7" fill="var(--accent-soft)" stroke="var(--accent)"/>
+        <!-- head -->
+        <ellipse cx="34" cy="14" rx="6" ry="5.5" fill="var(--accent-soft)" stroke="var(--accent)"/>
+        <!-- ears -->
+        <path d="M30 10 L28 6 L33 9"/>
+        <path d="M37 10 L39 6 L35 9"/>
+        <!-- face -->
+        <circle cx="32.5" cy="13.5" r="0.8" fill="var(--accent)"/>
+        <circle cx="35.5" cy="13.5" r="0.8" fill="var(--accent)"/>
+        <path d="M33 16 Q34 17 35 16"/>
+        <!-- whiskers -->
+        <line x1="39" y1="14" x2="44" y2="13"/>
+        <line x1="39" y1="15.5" x2="44" y2="16"/>
+        <!-- tail -->
+        <path class="tail" d="M12 18 Q6 14 8 9"/>
+        <!-- legs -->
+        <line class="leg"   x1="18" y1="24" x2="16" y2="31"/>
+        <line class="leg-r" x1="22" y1="25" x2="20" y2="31"/>
+        <line class="leg"   x1="26" y1="25" x2="28" y2="31"/>
+        <line class="leg-r" x1="30" y1="24" x2="32" y2="31"/>
+      </g>
+    </svg>
+  `;
+  log.appendChild(cat);
+  cat.addEventListener("animationend", () => cat.remove());
+}
+
+function addMsg(role, text) {
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  if (role === "assistant") {
+    div.innerHTML = renderMarkdown(text);
+  } else {
+    div.textContent = text;
+  }
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  if (role !== "system") chatMessages.push({ role, text });
+  return div;
+}
+
+async function sendChat() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+
+  if (/\bcat\b/i.test(text)) spawnWalkingCat();
+
+  // Remove any old follow-up chips
+  document.querySelectorAll(".followup-chips").forEach(el => el.remove());
+
+  addMsg("user", text);
+  const loadingMsg = addMsg("assistant", "…");
+
+  const pinnedContext = pinned.map(p => `- [${p.category}/${p.status}] ${p.text}`).join("\n") || "None pinned.";
+
+  try {
+    const res = await fetch(CHAT_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: text,
+        pinnedContext,
+        aboutContext,
+        tone: currentTone,
+        history: chatMessages.slice(0, -1),
+        includeFollowups: true
+      })
+    });
+    const data = await res.json();
+    const reply = data.reply || "No response.";
+    loadingMsg.innerHTML = renderMarkdown(reply);
+
+    // Response action buttons
+    const actions = document.createElement("div");
+    actions.className = "msg-actions";
+    actions.innerHTML = `
+      <button class="msg-action-btn" data-copy="${escapeHtml(reply)}">📋 Copy</button>
+      <button class="msg-action-btn" data-save="${escapeHtml(reply)}">＋ Save as entry</button>
+    `;
+    actions.querySelector("[data-copy]").addEventListener("click", function() {
+      navigator.clipboard.writeText(reply);
+      this.textContent = "✓ Copied";
+      setTimeout(() => this.textContent = "📋 Copy", 2000);
+    });
+    actions.querySelector("[data-save]").addEventListener("click", function() {
+      entries.unshift({ id: uid(), text: reply.slice(0, 300), category: "other", status: "logged", priority: "med", created: Date.now() });
+      renderEntries(); saveEntries();
+      this.textContent = "✓ Saved";
+      setTimeout(() => this.textContent = "＋ Save as entry", 2000);
+    });
+    loadingMsg.appendChild(actions);
+
+    chatMessages.push({ role: "assistant", text: reply });
+    autoSaveSession();
+
+    // Follow-up suggestion chips
+    if (data.followups && data.followups.length) {
+      const chips = document.createElement("div");
+      chips.className = "followup-chips";
+      data.followups.forEach(q => {
+        const btn = document.createElement("button");
+        btn.className = "followup-chip";
+        btn.textContent = q;
+        btn.addEventListener("click", () => {
+          document.getElementById("chatInput").value = q;
+          chips.remove();
+          sendChat();
+        });
+        chips.appendChild(btn);
+      });
+      document.getElementById("chatLog").appendChild(chips);
+      document.getElementById("chatLog").scrollTop = document.getElementById("chatLog").scrollHeight;
+    }
+
+  } catch (e) {
+    loadingMsg.textContent = "Couldn't reach the assistant.";
+  }
+}
+document.getElementById("sendChatBtn").addEventListener("click", sendChat);
+document.getElementById("chatInput").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
+});
+
+async function autoSaveSession() {
+  if (!sessionId) sessionId = uid();
+  try {
+    await fetch(SESSION_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: sessionId,
+        messages: chatMessages,
+        pinned: pinned.map(p => ({ id: p.id, text: p.text })),
+        updated: Date.now()
+      })
+    });
+  } catch (e) { /* non-critical */ }
+}
+
+document.getElementById("archiveChatBtn").addEventListener("click", async () => {
+  if (chatMessages.length === 0) { addMsg("system", "Nothing to archive yet."); return; }
+  if (!sessionId) sessionId = uid();
+  try {
+    await fetch(ARCHIVE_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: sessionId,
+        messages: chatMessages,
+        pinned: pinned.map(p => ({ id: p.id, text: p.text })),
+        archivedAt: Date.now()
+      })
+    });
+    addMsg("system", "Conversation archived — kept permanently.");
+  } catch (e) {
+    addMsg("system", "Archiving failed — check worker connection.");
+  }
+});
+
+function resetChatUI() {
+  chatMessages = [];
+  pinned = [];
+  sessionId = null;
+  chatLog.innerHTML = "";
+  renderPinTray();
+  addMsg("system", "Pin entries from the log, or just ask a question.");
+}
+
+document.getElementById("newChatBtn").addEventListener("click", () => {
+  if (chatMessages.length > 0 && !confirm("Start a new chat? This one will still auto-save for 24 hours unless you archived it.")) return;
+  resetChatUI();
+});
+
+document.getElementById("deleteChatBtn").addEventListener("click", async () => {
+  if (chatMessages.length === 0) { resetChatUI(); return; }
+  if (!confirm("Delete this conversation now? This can't be undone.")) return;
+  if (sessionId) {
+    try {
+      await fetch(SESSION_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: sessionId, delete: true })
+      });
+    } catch (e) { /* proceed with UI reset regardless */ }
+  }
+  resetChatUI();
+});
+
+/* ---------- Weekly digest ---------- */
+document.getElementById("digestBtn").addEventListener("click", async () => {
+  document.getElementById("digestBackdrop").classList.add("show");
+  const body = document.getElementById("digestBody");
+  body.textContent = "Reading this week's entries…";
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const recent = entries.filter(e => e.created >= weekAgo);
+  if (recent.length === 0) {
+    body.textContent = "No entries logged in the past 7 days.";
+    return;
+  }
+  const summary = recent.map(e => `- [${e.category}/${e.status}] ${e.text}`).join("\n");
+  try {
+    const res = await fetch(CHAT_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "digest",
+        message: `Here are this week's entries:\n${summary}\n\nGive a short digest: what came up, what's still open, and any pattern worth noticing. Plain prose, no markdown headers.`,
+        pinnedContext: "",
+        history: []
+      })
+    });
+    const data = await res.json();
+    body.textContent = data.reply || "No digest available.";
+  } catch (e) {
+    body.textContent = "Couldn't reach the assistant.";
+  }
+});
+document.getElementById("digestClose").addEventListener("click", () => {
+  document.getElementById("digestBackdrop").classList.remove("show");
+});
+
+/* ---------- Tabs / Archive view ---------- */
+document.querySelectorAll("nav.tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav.tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    document.getElementById("mainView").classList.toggle("hide", tab !== "main");
+    document.getElementById("archiveView").classList.toggle("show", tab === "archive");
+    if (tab === "archive") loadArchive();
+  });
+});
+
+let archivedChats = [];
+async function loadArchive() {
+  const list = document.getElementById("archiveList");
+  list.innerHTML = `<div class="empty-state">Loading…</div>`;
+  try {
+    const res = await fetch(ARCHIVE_ENDPOINT);
+    const data = await res.json();
+    archivedChats = data.archive || [];
+    renderArchive();
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state">Couldn't load archive.</div>`;
+  }
+}
+function renderArchive() {
+  const q = document.getElementById("archiveSearch").value.toLowerCase();
+  let visible = archivedChats;
+  if (q) {
+    visible = visible.filter(c => c.messages.some(m => m.text.toLowerCase().includes(q)));
+  }
+  visible = [...visible].sort((a, b) => b.archivedAt - a.archivedAt);
+  const list = document.getElementById("archiveList");
+  if (visible.length === 0) {
+    list.innerHTML = `<div class="empty-state">No archived conversations yet.</div>`;
+    return;
+  }
+  list.innerHTML = visible.map(c => {
+    const firstUser = c.messages.find(m => m.role === "user");
+    const snippet = firstUser ? firstUser.text : "(empty conversation)";
+    return `
+      <div class="archive-item">
+        <div class="archive-item-head">
+          <span class="timestamp">${fmtTime(c.archivedAt)}</span>
+          <div>
+            <button class="reopen-btn" onclick="reopenChat('${c.id}')">Reopen in chat</button>
+            <button class="reopen-btn" style="background:var(--warn-soft);color:var(--warn);" onclick="deleteArchivedChat('${c.id}')">Delete</button>
+          </div>
+        </div>
+        <div class="archive-snippet">${escapeHtml(snippet.slice(0, 140))}${snippet.length > 140 ? "…" : ""}</div>
+        ${c.pinned && c.pinned.length ? `<div class="archive-pinned">pinned: ${c.pinned.map(p => escapeHtml(p.text.slice(0,40))).join(" · ")}</div>` : ""}
+      </div>
+    `;
+  }).join("");
+}
+document.getElementById("archiveSearch").addEventListener("input", renderArchive);
+
+window.reopenChat = function(id) {
+  const c = archivedChats.find(c => c.id === id);
+  if (!c) return;
+  document.querySelector('nav.tabs button[data-tab="main"]').click();
+  chatMessages = [...c.messages];
+  sessionId = uid(); // new session, fresh 24h window, original archive entry untouched
+  chatLog.innerHTML = "";
+  c.messages.forEach(m => addMsg(m.role, m.text));
+  chatMessages = [...c.messages];
+  addMsg("system", "Reopened from archive — continuing as a new session.");
+};
+
+window.deleteArchivedChat = async function(id) {
+  if (!confirm("Permanently delete this archived conversation?")) return;
+  try {
+    await fetch(ARCHIVE_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, delete: true })
+    });
+    archivedChats = archivedChats.filter(c => c.id !== id);
+    renderArchive();
+  } catch (e) {
+    alert("Couldn't delete — check worker connection.");
+  }
+};
+
+/* ---------- Init ---------- */
+loadEntries();
+loadAbout();
+loadResponsibilities();
+</script>
+
+</body>
+</html>
