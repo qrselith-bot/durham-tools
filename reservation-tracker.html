@@ -321,8 +321,10 @@ function hoursUntil(dateStr) {
 
 function formatArrival(dateStr) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
-    ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  // check-in is standard 3pm, so the exact time isn't worth displaying —
+  // just the date. Underlying timestamps are still used for the call-window
+  // math (hoursUntil, day-grouping, auto-archive), just not shown here.
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 function relativeLabel(dateStr) {
@@ -379,11 +381,13 @@ function toggleDay(key) {
   render();
 }
 
-// primary: arrival date ascending. tiebreak: guest name A-Z
+// primary: guest name A-Z (so a guest with multiple reservations lands
+// back-to-back). tiebreak: arrival time ascending, for same-named guests
+// or if two people happen to share a name.
 function compareReservations(a, b) {
-  const dateDiff = new Date(a.arrival) - new Date(b.arrival);
-  if (dateDiff !== 0) return dateDiff;
-  return (a.guest || '').localeCompare(b.guest || '');
+  const nameDiff = (a.guest || '').localeCompare(b.guest || '');
+  if (nameDiff !== 0) return nameDiff;
+  return new Date(a.arrival) - new Date(b.arrival);
 }
 
 async function fetchList(manual) {
@@ -638,13 +642,13 @@ function render() {
 
 function buildEmailTemplate(r) {
   const firstName = (r.guest || '').split(' ')[0] || 'there';
-  const arrivalStr = new Date(r.arrival).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-  const departureStr = r.departure ? new Date(r.departure).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : '';
+  const arrivalStr = new Date(r.arrival).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const departureStr = r.departure ? new Date(r.departure).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : '';
   const subject = 'Your Upcoming Stay at The Durham Hotel — Confirmation #' + r.confirmNo;
   const body = 'Hi ' + firstName + ',\n\n' +
     'We\'re looking forward to welcoming you to The Durham Hotel! This is a quick note to confirm the details of your upcoming reservation:\n\n' +
     'Confirmation #: ' + r.confirmNo + '\n' +
-    'Arrival: ' + arrivalStr + '\n' +
+    'Arrival: ' + arrivalStr + ' (check-in at 3:00 PM)\n' +
     (departureStr ? 'Departure: ' + departureStr + '\n' : '') +
     'Room Type: ' + (r.roomType || '') + '\n' +
     'Nights: ' + (r.nights || '') + '\n\n' +
