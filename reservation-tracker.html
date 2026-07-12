@@ -93,9 +93,47 @@
   .tab.active { color: var(--gold-dark); border-color: var(--gold); }
   .tab .count { color: inherit; opacity: 0.7; font-weight: 500; }
 
-  .view-controls { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-  .hide-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); cursor: pointer; user-select: none; }
+  .search-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .search-box { flex: 1; min-width: 220px; display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--cream-border); border-radius: 7px; padding: 9px 12px; }
+  .search-box:focus-within { border-color: var(--gold); }
+  .search-box svg { color: var(--ink-faint); flex-shrink: 0; }
+  .search-box input { border: none; outline: none; font-family: inherit; font-size: 13px; flex: 1; color: var(--ink); background: transparent; }
+  .search-clear { background: none; border: none; color: var(--ink-faint); font-size: 18px; line-height: 1; cursor: pointer; padding: 0 2px; }
+  .search-clear:hover { color: var(--ink); }
+  .hide-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); cursor: pointer; user-select: none; white-space: nowrap; }
   .hide-toggle input { accent-color: var(--gold); width: 14px; height: 14px; cursor: pointer; }
+
+  .manage-team-btn {
+    display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--cream-border);
+    color: var(--ink-soft); font-family: inherit; font-size: 11.5px; font-weight: 600;
+    padding: 8px 12px; border-radius: 7px; cursor: pointer; white-space: nowrap;
+  }
+  .manage-team-btn:hover { border-color: var(--gold); color: var(--gold-dark); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(20,20,20,0.45);
+    align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 10px; padding: 20px; max-width: 380px; width: 100%; max-height: 80vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .modal-header h3 { margin: 0; font-size: 16px; }
+  .modal-close { background: none; border: none; font-size: 22px; line-height: 1; color: var(--ink-faint); cursor: pointer; padding: 0 2px; }
+  .modal-close:hover { color: var(--ink); }
+  .modal-sub { font-size: 11.5px; color: var(--ink-faint); margin: 4px 0 14px; line-height: 1.5; }
+  .team-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; max-height: 260px; overflow-y: auto; }
+  .team-row { display: flex; align-items: center; justify-content: space-between; background: var(--cream); border: 1px solid var(--cream-border); border-radius: 6px; padding: 8px 10px; }
+  .team-row span { font-size: 13px; color: var(--ink); }
+  .team-remove { background: none; border: none; color: var(--red-text); font-size: 12px; font-weight: 700; cursor: pointer; padding: 2px 6px; }
+  .team-remove:hover { text-decoration: underline; }
+  .team-empty { font-size: 12px; color: var(--ink-faint); text-align: center; padding: 10px; }
+  .team-add-row { display: flex; gap: 8px; }
+  .team-add-row input { flex: 1; font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--cream-border); border-radius: 6px; background: var(--cream); outline: none; }
+  .team-add-row input:focus { border-color: var(--gold); background: #fff; }
+  .team-add-row .btn-primary { padding: 8px 16px; }
+
+  .archived-badge { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: var(--cream); border: 1px solid var(--cream-border); color: var(--ink-faint); padding: 3px 8px; border-radius: 20px; margin-left: 8px; }
+  .search-results-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold-dark); font-weight: 700; margin: 6px 4px 10px; }
 
   .day-section { margin-bottom: 16px; }
   .day-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; padding: 10px 4px; border-bottom: 1px solid var(--cream-border); }
@@ -142,6 +180,7 @@
   .status-btn[data-status="voicemail"].active { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); }
   .status-btn[data-status="follow_up"].active { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
   .status-btn[data-status="no_phone_email"].active { background: #EFE9F5; border-color: #D3C2E8; color: #6B4B9A; }
+  .status-btn[data-status="cancelled"].active { background: #EDEBE7; border-color: #D2CEC5; color: #6B665C; text-decoration: line-through; }
 
   .email-panel { margin-top: 10px; background: var(--cream); border: 1px solid var(--cream-border); border-radius: 6px; padding: 10px 12px; }
   .email-panel-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-faint); font-weight: 700; margin-bottom: 6px; }
@@ -220,24 +259,51 @@
     <div class="overdue-pill" id="overdue-pill" style="display:none;"></div>
   </div>
 
-  <div class="view-controls">
-    <label class="hide-toggle">
+  <div class="search-row">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="search-input" placeholder="Search by guest name or confirmation #..." oninput="handleSearchInput()">
+      <button id="search-clear" class="search-clear" onclick="clearSearch()" style="display:none;">&times;</button>
+    </div>
+    <label class="hide-toggle" id="hide-toggle-wrap">
       <input type="checkbox" id="hide-completed-toggle" onchange="render()">
       Hide completed
     </label>
+    <button class="manage-team-btn" onclick="openTeamPanel()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Manage Team
+    </button>
   </div>
 
   <section class="list" id="list"></section>
+
+  <div class="modal-overlay" id="team-modal-overlay" onclick="if(event.target===this) closeTeamPanel()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Manage Team</h3>
+        <button class="modal-close" onclick="closeTeamPanel()">&times;</button>
+      </div>
+      <p class="modal-sub">Names here fill the "Called by" dropdown on every reservation. Changes save immediately and apply to everyone.</p>
+      <div class="team-list" id="team-list"></div>
+      <div class="team-add-row">
+        <input type="text" id="team-add-input" placeholder="Add a name..." onkeydown="if(event.key==='Enter') addTeamMember()">
+        <button class="btn-primary" onclick="addTeamMember()">Add</button>
+      </div>
+    </div>
+  </div>
 
 </div>
 <div id="toast"></div>
 
 <script>
 const API_BASE = 'https://durham-proxy.qrselith.workers.dev';
-const STAFF = ['Gary','Remy','Jasmine','Lashonda','Mason','Tyler','Rodney','Julius'];
-const STATUS_LABELS = { confirmed: 'Confirmed', no_answer: 'No Answer', voicemail: 'Voicemail', follow_up: 'Follow Up', no_phone_email: 'No Phone – Email' };
+let STAFF = ['Gary','Remy','Jasmine','Lashonda','Mason','Tyler','Rodney','Julius']; // replaced by loadStaff() on init
+const STATUS_LABELS = { confirmed: 'Confirmed', no_answer: 'No Answer', voicemail: 'Voicemail', follow_up: 'Follow Up', no_phone_email: 'No Phone – Email', cancelled: 'Cancelled' };
 
 let reservations = [];
+let searchResults = [];
+let searchQuery = '';
+let searchDebounce = null;
 let collapsedDays = new Set(); // date keys (YYYY-MM-DD) currently collapsed
 let editingKeys = new Set(); // confirmNo values currently being typed into — skip overwrite on poll
 
@@ -433,7 +499,7 @@ function handleFileSelect(file) {
 })();
 
 async function updateReservation(confirmNo, patch) {
-  const r = reservations.find(x => x.confirmNo === confirmNo);
+  const r = reservations.find(x => x.confirmNo === confirmNo) || searchResults.find(x => x.confirmNo === confirmNo);
   if (!r) return;
   Object.assign(r, patch);
   render();
@@ -460,7 +526,58 @@ function setStatus(confirmNo, status) {
   updateReservation(confirmNo, { status, calledBy: staff, calledAt: new Date().toISOString() });
 }
 
+function handleSearchInput() {
+  const val = document.getElementById('search-input').value;
+  document.getElementById('search-clear').style.display = val ? 'block' : 'none';
+  clearTimeout(searchDebounce);
+  if (!val.trim()) {
+    searchQuery = '';
+    searchResults = [];
+    document.getElementById('hide-toggle-wrap').style.display = 'flex';
+    render();
+    return;
+  }
+  searchDebounce = setTimeout(() => runSearch(val.trim()), 350);
+}
+
+async function runSearch(query) {
+  searchQuery = query;
+  document.getElementById('hide-toggle-wrap').style.display = 'none';
+  try {
+    const res = await fetch(API_BASE + '/api/reservations/search?q=' + encodeURIComponent(query));
+    const data = await res.json();
+    searchResults = data.reservations || [];
+    render();
+  } catch (err) {
+    console.error(err);
+    showToast('Search failed — check connection');
+  }
+}
+
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  document.getElementById('hide-toggle-wrap').style.display = 'flex';
+  searchQuery = '';
+  searchResults = [];
+  render();
+}
+
+function renderSearchResults() {
+  const list = document.getElementById('list');
+  document.getElementById('overdue-pill').style.display = 'none';
+  if (!searchResults.length) {
+    list.innerHTML = '<div class="search-results-label">No matches for "' + escapeHtml(searchQuery) + '"</div>';
+    return;
+  }
+  const sorted = searchResults.slice().sort(compareReservations);
+  list.innerHTML = '<div class="search-results-label">' + sorted.length + ' result' + (sorted.length === 1 ? '' : 's') + ' for "' + escapeHtml(searchQuery) + '"</div>' +
+    sorted.map(cardHtml).join('');
+}
+
 function render() {
+  if (searchQuery) { renderSearchResults(); return; }
+
   const hideCompleted = document.getElementById('hide-completed-toggle').checked;
 
   // overall summary stats stay window-based (next 48hrs), regardless of day grouping
@@ -550,7 +667,6 @@ function cardHtml(r) {
   const isUrgent = rel.overdue && (!r.status || r.status === 'pending');
   const chips = [];
   if (r.vip) chips.push('<span class="chip vip">VIP</span>');
-  if (r.balance && parseFloat(r.balance) < 0) chips.push('<span class="chip balance">Balance ' + Number(r.balance).toFixed(2) + '</span>');
   if (r.addons) chips.push('<span class="chip addon">' + escapeHtml(r.addons) + '</span>');
   if (r.company) chips.push('<span class="chip">' + escapeHtml(r.company) + '</span>');
   if (r.travelAgent && r.travelAgent !== r.company) chips.push('<span class="chip">' + escapeHtml(r.travelAgent) + '</span>');
@@ -586,12 +702,12 @@ function cardHtml(r) {
 
   return '<div class="card' + (isUrgent ? ' urgent' : '') + '">' +
     '<div class="card-top">' +
-      '<div><div class="card-name">' + escapeHtml(r.guest) + '</div><div class="card-conf">Conf #' + escapeHtml(r.confirmNo) + '</div></div>' +
+      '<div><div class="card-name">' + escapeHtml(r.guest) + (r.archived ? '<span class="archived-badge">Past arrival</span>' : '') + '</div><div class="card-conf">Conf #' + escapeHtml(r.confirmNo) + '</div></div>' +
       '<div class="card-arrival">' + formatArrival(r.arrival) + '<span class="rel' + (isUrgent ? ' overdue' : '') + '">' + rel.text + '</span></div>' +
     '</div>' +
     '<div class="chip-row">' + chips.join('') + '</div>' +
     '<div class="status-row">' +
-      ['confirmed','no_answer','voicemail','follow_up','no_phone_email'].map(s =>
+      ['confirmed','no_answer','voicemail','follow_up','no_phone_email','cancelled'].map(s =>
         '<button class="status-btn' + (r.status === s ? ' active' : '') + '" data-status="' + s + '" onclick="setStatus(\'' + r.confirmNo + '\',\'' + s + '\')">' + STATUS_LABELS[s] + '</button>'
       ).join('') +
     '</div>' +
@@ -616,7 +732,78 @@ function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+async function loadStaff() {
+  try {
+    const res = await fetch(API_BASE + '/api/reservations/staff');
+    const data = await res.json();
+    if (Array.isArray(data.staff) && data.staff.length) STAFF = data.staff;
+    render();
+  } catch (err) {
+    console.error(err);
+    // keep the built-in fallback list if the fetch fails
+  }
+}
+
+async function saveStaff() {
+  try {
+    await fetch(API_BASE + '/api/reservations/staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ staff: STAFF })
+    });
+  } catch (err) {
+    console.error(err);
+    showToast('Could not save team list — check connection');
+  }
+}
+
+function openTeamPanel() {
+  renderTeamList();
+  document.getElementById('team-modal-overlay').classList.add('show');
+}
+
+function closeTeamPanel() {
+  document.getElementById('team-modal-overlay').classList.remove('show');
+}
+
+function renderTeamList() {
+  const box = document.getElementById('team-list');
+  if (!STAFF.length) {
+    box.innerHTML = '<div class="team-empty">No one on the list yet — add a name below.</div>';
+    return;
+  }
+  box.innerHTML = STAFF.map(name => {
+    const jsSafeName = JSON.stringify(name).replace(/"/g, '&quot;');
+    return '<div class="team-row"><span>' + escapeHtml(name) + '</span>' +
+      '<button class="team-remove" onclick="removeTeamMember(' + jsSafeName + ')">Remove</button></div>';
+  }).join('');
+}
+
+function addTeamMember() {
+  const input = document.getElementById('team-add-input');
+  const name = input.value.trim();
+  if (!name) return;
+  if (STAFF.some(s => s.toLowerCase() === name.toLowerCase())) {
+    showToast(name + ' is already on the list');
+    return;
+  }
+  STAFF.push(name);
+  STAFF.sort((a, b) => a.localeCompare(b));
+  input.value = '';
+  renderTeamList();
+  saveStaff();
+  render();
+}
+
+function removeTeamMember(name) {
+  STAFF = STAFF.filter(s => s !== name);
+  renderTeamList();
+  saveStaff();
+  render();
+}
+
 fetchList();
+loadStaff();
 setInterval(() => { if (editingKeys.size === 0) fetchList(); }, 45000);
 </script>
 </body>
