@@ -649,7 +649,7 @@ async function parseAndImport(text) {
   }
 
   try {
-    let list = [];
+    let totalAdded = 0, totalSkipped = 0;
     for (let b = 0; b < batches.length; b++) {
       if (batches.length > 1) {
         status.textContent = 'Reading batch ' + (b + 1) + ' of ' + batches.length + ' (' + batches[b].length + ' reservations)...';
@@ -660,28 +660,44 @@ async function parseAndImport(text) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: batchText })
       });
-      if (!parseRes.ok) throw new Error('Parse failed on batch ' + (b + 1) + ': ' + await readErrorDetail(parseRes));
+      if (!parseRes.ok) {
+        throw new Error(
+          'Batch ' + (b + 1) + ' of ' + batches.length + ' failed: ' + await readErrorDetail(parseRes) +
+          (totalAdded > 0 ? ' — ' + totalAdded + ' reservation(s) from earlier batches were already saved.' : '')
+        );
+      }
       const parsed = await parseRes.json();
-      list = list.concat(parsed.reservations || []);
+      const batchList = parsed.reservations || [];
+
+      // Import this batch right away rather than waiting for every batch to
+      // finish first — so if a later batch fails, everything parsed so far
+      // is already saved instead of being thrown away.
+      if (batchList.length) {
+        const importRes = await fetch(API_BASE + '/api/reservations/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reservations: batchList })
+        });
+        if (!importRes.ok) {
+          throw new Error(
+            'Import failed on batch ' + (b + 1) + ' of ' + batches.length + ': ' + await readErrorDetail(importRes) +
+            (totalAdded > 0 ? ' — ' + totalAdded + ' reservation(s) from earlier batches were already saved.' : '')
+          );
+        }
+        const importResult = await importRes.json();
+        totalAdded += importResult.added;
+        totalSkipped += importResult.skipped;
+      }
     }
 
-    if (!list.length) {
+    if (totalAdded === 0 && totalSkipped === 0) {
       status.textContent = 'No reservations found in that file.';
       status.className = 'import-status err';
       setImportBusy(false);
       return;
     }
 
-    status.textContent = 'Importing ' + list.length + ' reservation(s)...';
-    const importRes = await fetch(API_BASE + '/api/reservations/import', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reservations: list })
-    });
-    if (!importRes.ok) throw new Error('Import failed: ' + await readErrorDetail(importRes));
-    const importResult = await importRes.json();
-
-    status.textContent = 'Added ' + importResult.added + ' new · ' + importResult.skipped + ' already on the list';
+    status.textContent = 'Added ' + totalAdded + ' new · ' + totalSkipped + ' already on the list';
     status.className = 'import-status ok';
     document.getElementById('paste-box').value = '';
     document.getElementById('file-input').value = '';
