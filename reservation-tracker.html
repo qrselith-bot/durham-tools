@@ -580,7 +580,10 @@ function prefilterArrivalCsv(text, focusVal) {
 async function readErrorDetail(res) {
   try {
     const body = await res.json();
-    return body.error || body.detail || JSON.stringify(body);
+    const parts = [];
+    if (body.error) parts.push(body.error);
+    if (body.detail) parts.push(body.detail);
+    return parts.length ? parts.join(' — ') : JSON.stringify(body);
   } catch (e) {
     try { return await res.text(); } catch (e2) { return 'HTTP ' + res.status; }
   }
