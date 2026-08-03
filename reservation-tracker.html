@@ -540,7 +540,7 @@ function extractFirstIsoDate(line) {
 // call export" (often pasted straight from a PDF, no delimiter at all).
 function prefilterArrivalCsv(text, focusVal) {
   const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-  if (lines.length < 2) return { text, kept: 0, total: 0, filtered: false };
+  if (lines.length < 2) return { headerBlock: text, dataLines: [], kept: 0, total: 0, filtered: false };
 
   const target = targetDateForFocus(focusVal); // null when focusVal === 'all'
   const now = Date.now();
@@ -555,40 +555,50 @@ function prefilterArrivalCsv(text, focusVal) {
     return diff >= -bufferMs && diff <= windowMs;
   }
 
-  const header = lines[0];
-  const headerCols = parseCsvLine(header);
-  const looksLikeCsv = headerCols.length >= 5; // real CSV headers split into several columns; freeform text won't
+  // Try to find a real CSV header among the first several lines (skipping
+  // any report metadata rows like Hotel Code / Generated Date above it).
+  let headerIdx = -1, arrivalIdx = -1;
+  const scanLimit = Math.min(10, lines.length);
+  for (let i = 0; i < scanLimit; i++) {
+    const cols = parseCsvLine(lines[i]);
+    if (cols.length < 5) continue;
+    const idx = cols.findIndex(h => /arrival/i.test(h) && !/room/i.test(h));
+    if (idx !== -1) { headerIdx = i; arrivalIdx = idx; break; }
+  }
 
-  if (looksLikeCsv) {
-    // find an "arrival"-style column, but not "Arrival Room Type"
-    const arrivalIdx = headerCols.findIndex(h => /arrival/i.test(h) && !/room/i.test(h));
-    if (arrivalIdx === -1) return { text, kept: lines.length - 1, total: lines.length - 1, filtered: false };
-
-    const keptLines = [header];
+  if (headerIdx !== -1) {
+    const headerBlock = lines.slice(0, headerIdx + 1).join('\n'); // metadata rows + the real header, as-is
+    const dataLines = [];
     let total = 0, kept = 0;
-    for (let i = 1; i < lines.length; i++) {
+    for (let i = headerIdx + 1; i < lines.length; i++) {
       const line = lines[i];
       if (/^TOTAL ARRIVAL ROOMS/i.test(line)) continue; // summary footer, not a real row
       total++;
       const cols = parseCsvLine(line);
       const d = parseAnyDate(cols[arrivalIdx]);
-      if (!d) { keptLines.push(line); kept++; continue; } // unparseable — keep it, let the AI sort it out
-      if (inRange(d)) { keptLines.push(line); kept++; }
+      if (!d) { dataLines.push(line); kept++; continue; } // unparseable — keep it, let the AI sort it out
+      if (inRange(d)) { dataLines.push(line); kept++; }
     }
-    return { text: keptLines.join('\n'), kept, total, filtered: true, singleDay: !!target };
+    return { headerBlock, dataLines, kept, total, filtered: true, singleDay: !!target };
   }
 
-  // Freeform/PDF-extracted format: no delimiter, so scan each line for the
-  // first ISO date (YYYY-MM-DD) rather than splitting into columns at all.
-  const keptLines = [];
+  // Fallback: no recognizable CSV header found — scan each line directly for
+  // an embedded ISO date instead (this is what makes freeform/PDF-extracted
+  // text work too, and now also covers CSVs whose header didn't match).
+  // Everything before the first dated line is treated as header/title text.
+  let firstDataIdx = lines.findIndex(l => extractFirstIsoDate(l) !== null);
+  if (firstDataIdx === -1) firstDataIdx = lines.length; // no dates anywhere — treat it all as header, no data
+  const headerBlock = lines.slice(0, firstDataIdx).join('\n');
+  const dataLines = [];
   let total = 0, kept = 0;
-  for (const line of lines) {
+  for (let i = firstDataIdx; i < lines.length; i++) {
+    const line = lines[i];
     const d = extractFirstIsoDate(line);
-    if (!d) { keptLines.push(line); continue; } // header/title/footer lines have no date — always keep them
+    if (!d) { dataLines.push(line); continue; } // no date on this line — keep it, let the AI sort it out
     total++;
-    if (inRange(d)) { keptLines.push(line); kept++; }
+    if (inRange(d)) { dataLines.push(line); kept++; }
   }
-  return { text: keptLines.join('\n'), kept, total, filtered: true, singleDay: !!target };
+  return { headerBlock, dataLines, kept, total, filtered: true, singleDay: !!target };
 }
 
 // Pulls whatever detail the Worker actually sent back on a failed response,
@@ -605,6 +615,12 @@ async function readErrorDetail(res) {
   }
 }
 
+// Small batches keep each individual AI call fast and reliable — a single
+// request covering 100+ reservations can take long enough that Cloudflare's
+// own connection gives up before a response comes back. A handful of quick
+// requests is far more reliable than one slow one.
+const PARSE_BATCH_SIZE = 8;
+
 async function parseAndImport(text) {
   const status = document.getElementById('import-status');
   text = (text || '').trim();
@@ -619,17 +635,36 @@ async function parseAndImport(text) {
     const scopeText = pre.singleDay ? dayLabel(dateKey(targetDateForFocus(focusDay).toISOString())) : ('within ' + PREFILTER_WINDOW_DAYS + ' days');
     status.textContent = 'Trimmed ' + (pre.total - pre.kept) + ' row(s) outside range, keeping ' + pre.kept + ' arriving ' + scopeText + '...';
   }
-  text = pre.text;
+
+  if (!pre.dataLines.length) {
+    status.textContent = 'No reservations found in that file for the current Focus Day setting.';
+    status.className = 'import-status err';
+    setImportBusy(false);
+    return;
+  }
+
+  const batches = [];
+  for (let i = 0; i < pre.dataLines.length; i += PARSE_BATCH_SIZE) {
+    batches.push(pre.dataLines.slice(i, i + PARSE_BATCH_SIZE));
+  }
 
   try {
-    const parseRes = await fetch(API_BASE + '/api/reservations/parse', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    });
-    if (!parseRes.ok) throw new Error('Parse failed: ' + await readErrorDetail(parseRes));
-    const parsed = await parseRes.json();
-    const list = parsed.reservations || [];
+    let list = [];
+    for (let b = 0; b < batches.length; b++) {
+      if (batches.length > 1) {
+        status.textContent = 'Reading batch ' + (b + 1) + ' of ' + batches.length + ' (' + batches[b].length + ' reservations)...';
+      }
+      const batchText = pre.headerBlock + '\n' + batches[b].join('\n');
+      const parseRes = await fetch(API_BASE + '/api/reservations/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: batchText })
+      });
+      if (!parseRes.ok) throw new Error('Parse failed on batch ' + (b + 1) + ': ' + await readErrorDetail(parseRes));
+      const parsed = await parseRes.json();
+      list = list.concat(parsed.reservations || []);
+    }
+
     if (!list.length) {
       status.textContent = 'No reservations found in that file.';
       status.className = 'import-status err';
