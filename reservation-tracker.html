@@ -505,49 +505,73 @@ function parseCsvLine(line) {
   return out;
 }
 
+// Pulls the first YYYY-MM-DD found in a line of text (used for the freeform/
+// PDF-extracted export format, which has no delimiter to split on at all).
+function extractFirstIsoDate(line) {
+  const m = line.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+  if (!m) return null;
+  const d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+  return isNaN(d.getTime()) ? null : d;
+}
+
 // Trims a raw CSV export down to just the relevant rows before it's ever
 // sent to the AI parser. When focusVal is a specific day, keeps only rows
 // arriving on that exact calendar day. When focusVal is 'all', falls back to
 // the broader PREFILTER_WINDOW_DAYS rolling window. Either way, this is what
 // keeps a multi-year export from being slow, expensive, or truncated —
 // regardless of whatever date filter StayNTouch's own export does or doesn't apply.
+// Handles both comma-separated CSV exports and the whitespace-only "confirmation
+// call export" (often pasted straight from a PDF, no delimiter at all).
 function prefilterArrivalCsv(text, focusVal) {
   const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
   if (lines.length < 2) return { text, kept: 0, total: 0, filtered: false };
-
-  const header = lines[0];
-  const headerCols = parseCsvLine(header);
-  // find an "arrival"-style column, but not "Arrival Room Type"
-  const arrivalIdx = headerCols.findIndex(h => /arrival/i.test(h) && !/room/i.test(h));
-  if (arrivalIdx === -1) return { text, kept: lines.length - 1, total: lines.length - 1, filtered: false };
 
   const target = targetDateForFocus(focusVal); // null when focusVal === 'all'
   const now = Date.now();
   const windowMs = PREFILTER_WINDOW_DAYS * 24 * 3600000;
   const bufferMs = PREFILTER_PAST_BUFFER_DAYS * 24 * 3600000;
-  const keptLines = [header];
-  let total = 0, kept = 0;
 
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (/^TOTAL ARRIVAL ROOMS/i.test(line)) continue; // summary footer, not a real row
-    total++;
-    const cols = parseCsvLine(line);
-    const d = parseUsDateTime(cols[arrivalIdx]);
-    if (!d) { keptLines.push(line); kept++; continue; } // unparseable — keep it, let the AI sort it out
-
+  function inRange(d) {
     if (target) {
-      // single-day mode: match the exact calendar day
-      if (d.getFullYear() === target.getFullYear() && d.getMonth() === target.getMonth() && d.getDate() === target.getDate()) {
-        keptLines.push(line); kept++;
-      }
-    } else {
-      // 'all upcoming' mode: rolling window
-      const diff = d.getTime() - now;
-      if (diff >= -bufferMs && diff <= windowMs) { keptLines.push(line); kept++; }
+      return d.getFullYear() === target.getFullYear() && d.getMonth() === target.getMonth() && d.getDate() === target.getDate();
     }
+    const diff = d.getTime() - now;
+    return diff >= -bufferMs && diff <= windowMs;
   }
 
+  const header = lines[0];
+  const headerCols = parseCsvLine(header);
+  const looksLikeCsv = headerCols.length >= 5; // real CSV headers split into several columns; freeform text won't
+
+  if (looksLikeCsv) {
+    // find an "arrival"-style column, but not "Arrival Room Type"
+    const arrivalIdx = headerCols.findIndex(h => /arrival/i.test(h) && !/room/i.test(h));
+    if (arrivalIdx === -1) return { text, kept: lines.length - 1, total: lines.length - 1, filtered: false };
+
+    const keptLines = [header];
+    let total = 0, kept = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (/^TOTAL ARRIVAL ROOMS/i.test(line)) continue; // summary footer, not a real row
+      total++;
+      const cols = parseCsvLine(line);
+      const d = parseUsDateTime(cols[arrivalIdx]);
+      if (!d) { keptLines.push(line); kept++; continue; } // unparseable — keep it, let the AI sort it out
+      if (inRange(d)) { keptLines.push(line); kept++; }
+    }
+    return { text: keptLines.join('\n'), kept, total, filtered: true, singleDay: !!target };
+  }
+
+  // Freeform/PDF-extracted format: no delimiter, so scan each line for the
+  // first ISO date (YYYY-MM-DD) rather than splitting into columns at all.
+  const keptLines = [];
+  let total = 0, kept = 0;
+  for (const line of lines) {
+    const d = extractFirstIsoDate(line);
+    if (!d) { keptLines.push(line); continue; } // header/title/footer lines have no date — always keep them
+    total++;
+    if (inRange(d)) { keptLines.push(line); kept++; }
+  }
   return { text: keptLines.join('\n'), kept, total, filtered: true, singleDay: !!target };
 }
 
