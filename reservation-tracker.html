@@ -575,6 +575,17 @@ function prefilterArrivalCsv(text, focusVal) {
   return { text: keptLines.join('\n'), kept, total, filtered: true, singleDay: !!target };
 }
 
+// Pulls whatever detail the Worker actually sent back on a failed response,
+// so errors show a real cause instead of a generic "something went wrong".
+async function readErrorDetail(res) {
+  try {
+    const body = await res.json();
+    return body.error || body.detail || JSON.stringify(body);
+  } catch (e) {
+    try { return await res.text(); } catch (e2) { return 'HTTP ' + res.status; }
+  }
+}
+
 async function parseAndImport(text) {
   const status = document.getElementById('import-status');
   text = (text || '').trim();
@@ -597,7 +608,7 @@ async function parseAndImport(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
     });
-    if (!parseRes.ok) throw new Error('Parse failed');
+    if (!parseRes.ok) throw new Error('Parse failed: ' + await readErrorDetail(parseRes));
     const parsed = await parseRes.json();
     const list = parsed.reservations || [];
     if (!list.length) {
@@ -613,7 +624,7 @@ async function parseAndImport(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reservations: list })
     });
-    if (!importRes.ok) throw new Error('Import failed');
+    if (!importRes.ok) throw new Error('Import failed: ' + await readErrorDetail(importRes));
     const importResult = await importRes.json();
 
     status.textContent = 'Added ' + importResult.added + ' new · ' + importResult.skipped + ' already on the list';
@@ -623,7 +634,7 @@ async function parseAndImport(text) {
     await fetchList();
   } catch (err) {
     console.error(err);
-    status.textContent = 'Something went wrong reading that file. Try again.';
+    status.textContent = err.message || 'Something went wrong reading that file. Try again.';
     status.className = 'import-status err';
   } finally {
     setImportBusy(false);
@@ -687,7 +698,7 @@ async function parseAndImportPdf(base64) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pdfBase64: base64 })
     });
-    if (!parseRes.ok) throw new Error('Parse failed');
+    if (!parseRes.ok) throw new Error('Parse failed: ' + await readErrorDetail(parseRes));
     const parsed = await parseRes.json();
     let list = parsed.reservations || [];
 
@@ -717,7 +728,7 @@ async function parseAndImportPdf(base64) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reservations: list })
     });
-    if (!importRes.ok) throw new Error('Import failed');
+    if (!importRes.ok) throw new Error('Import failed: ' + await readErrorDetail(importRes));
     const importResult = await importRes.json();
 
     status.textContent = 'Added ' + importResult.added + ' new · ' + importResult.skipped + ' already on the list';
@@ -726,7 +737,7 @@ async function parseAndImportPdf(base64) {
     await fetchList();
   } catch (err) {
     console.error(err);
-    status.textContent = 'Something went wrong reading that PDF. Try again.';
+    status.textContent = err.message || 'Something went wrong reading that PDF. Try again.';
     status.className = 'import-status err';
   } finally {
     setImportBusy(false);
