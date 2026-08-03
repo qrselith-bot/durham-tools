@@ -469,8 +469,8 @@ async function fetchList(manual) {
 const PREFILTER_WINDOW_DAYS = 14;
 const PREFILTER_PAST_BUFFER_DAYS = 2; // small buffer so same-day/just-passed rows aren't cut
 
-// Parses "MM-DD-YYYY hh:mm AM/PM" (and MM/DD/YYYY variants). Returns null if
-// it doesn't match — callers should keep the row rather than drop it when null.
+// Parses "MM-DD-YYYY hh:mm AM/PM" (and MM/DD/YYYY variants), used by Formats A/B.
+// Returns null if it doesn't match — callers should keep the row rather than drop it when null.
 function parseUsDateTime(raw) {
   const m = (raw || '').trim().match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
   if (!m) return null;
@@ -483,6 +483,22 @@ function parseUsDateTime(raw) {
   }
   const d = new Date(yr, mo - 1, da, hh, mi);
   return isNaN(d.getTime()) ? null : d;
+}
+
+// Parses "YYYY-MM-DD" (optionally with a time part), used by Format C's CSV export.
+function parseIsoDate(raw) {
+  const m = (raw || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{1,2}):(\d{2}))?/);
+  if (!m) return null;
+  const yr = parseInt(m[1], 10), mo = parseInt(m[2], 10), da = parseInt(m[3], 10);
+  const hh = m[4] ? parseInt(m[4], 10) : 15; // default to 3pm check-in if no time given
+  const mi = m[5] ? parseInt(m[5], 10) : 0;
+  const d = new Date(yr, mo - 1, da, hh, mi);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Tries both date shapes the various StayNTouch exports use, in order.
+function parseAnyDate(raw) {
+  return parseUsDateTime(raw) || parseIsoDate(raw);
 }
 
 // Splits one CSV line respecting quoted fields (so "Adams, Amber" stays one field)
@@ -555,7 +571,7 @@ function prefilterArrivalCsv(text, focusVal) {
       if (/^TOTAL ARRIVAL ROOMS/i.test(line)) continue; // summary footer, not a real row
       total++;
       const cols = parseCsvLine(line);
-      const d = parseUsDateTime(cols[arrivalIdx]);
+      const d = parseAnyDate(cols[arrivalIdx]);
       if (!d) { keptLines.push(line); kept++; continue; } // unparseable — keep it, let the AI sort it out
       if (inRange(d)) { keptLines.push(line); kept++; }
     }
