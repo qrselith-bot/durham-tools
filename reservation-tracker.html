@@ -248,8 +248,8 @@
     <h2>Import Arrivals</h2>
     <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
-      <div class="dropzone-text"><strong>Click to upload</strong> the arrivals file<br>from StayNTouch (or drag it here)</div>
-      <input type="file" id="file-input" accept=".csv,.txt,text/csv,text/plain" style="display:none" onchange="handleFileSelect(this.files[0])">
+      <div class="dropzone-text"><strong>Click to upload</strong> the arrivals file<br>CSV or PDF from StayNTouch (or drag it here)</div>
+      <input type="file" id="file-input" accept=".csv,.txt,.pdf,text/csv,text/plain,application/pdf" style="display:none" onchange="handleFileSelect(this.files[0])">
     </div>
     <div class="import-row">
       <span class="import-status" id="import-status"></span>
@@ -282,7 +282,7 @@
       <option value="today">Today</option>
       <option value="all">All upcoming</option>
     </select>
-    <span class="focus-hint">Import </span>
+    <span class="focus-hint">Import and the dashboard both follow this — matches your 24–48hr call window by default.</span>
   </div>
 
   <div class="search-row">
@@ -642,6 +642,24 @@ function handleFileSelect(file) {
   const status = document.getElementById('import-status');
   status.textContent = 'Reading "' + file.name + '"...';
   status.className = 'import-status';
+
+  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+
+  if (isPdf) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      // e.target.result is a data URL like "data:application/pdf;base64,XXXX" — strip the prefix
+      const base64 = e.target.result.split(',')[1] || '';
+      parseAndImportPdf(base64);
+    };
+    reader.onerror = () => {
+      status.textContent = 'Could not read that file — try again or use paste instead.';
+      status.className = 'import-status err';
+    };
+    reader.readAsDataURL(file);
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = e => parseAndImport(e.target.result);
   reader.onerror = () => {
@@ -649,6 +667,89 @@ function handleFileSelect(file) {
     status.className = 'import-status err';
   };
   reader.readAsText(file);
+}
+
+// PDFs can't be pre-scanned for dates client-side the way plain text can, so
+// this sends the whole document to the AI (which reads it as a real PDF, not
+// raw bytes) and then filters the *parsed results* down to the current Focus
+// Day / window afterward, before anything gets imported.
+async function parseAndImportPdf(base64) {
+  const status = document.getElementById('import-status');
+  if (!base64) { status.textContent = 'Could not read that PDF.'; status.className = 'import-status err'; return; }
+
+  status.textContent = 'Reading PDF report...';
+  status.className = 'import-status';
+  setImportBusy(true);
+
+  try {
+    const parseRes = await fetch(API_BASE + '/api/reservations/parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pdfBase64: base64 })
+    });
+    if (!parseRes.ok) throw new Error('Parse failed');
+    const parsed = await parseRes.json();
+    let list = parsed.reservations || [];
+
+    if (!list.length) {
+      status.textContent = 'No reservations found in that PDF.';
+      status.className = 'import-status err';
+      setImportBusy(false);
+      return;
+    }
+
+    const beforeCount = list.length;
+    list = filterReservationsByFocus(list, focusDay);
+    if (list.length < beforeCount) {
+      status.textContent = 'Found ' + beforeCount + ', keeping ' + list.length + ' matching current Focus Day...';
+    }
+
+    if (!list.length) {
+      status.textContent = 'Found ' + beforeCount + ' reservation(s), but none matched the current Focus Day setting.';
+      status.className = 'import-status err';
+      setImportBusy(false);
+      return;
+    }
+
+    status.textContent = 'Importing ' + list.length + ' reservation(s)...';
+    const importRes = await fetch(API_BASE + '/api/reservations/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reservations: list })
+    });
+    if (!importRes.ok) throw new Error('Import failed');
+    const importResult = await importRes.json();
+
+    status.textContent = 'Added ' + importResult.added + ' new · ' + importResult.skipped + ' already on the list';
+    status.className = 'import-status ok';
+    document.getElementById('file-input').value = '';
+    await fetchList();
+  } catch (err) {
+    console.error(err);
+    status.textContent = 'Something went wrong reading that PDF. Try again.';
+    status.className = 'import-status err';
+  } finally {
+    setImportBusy(false);
+  }
+}
+
+// Filters an already-parsed reservations array (from the AI) down to the
+// current Focus Day / window — the PDF path's equivalent of the client-side
+// CSV pre-filter, just applied after parsing instead of before.
+function filterReservationsByFocus(list, focusVal) {
+  const target = targetDateForFocus(focusVal);
+  const now = Date.now();
+  const windowMs = PREFILTER_WINDOW_DAYS * 24 * 3600000;
+  const bufferMs = PREFILTER_PAST_BUFFER_DAYS * 24 * 3600000;
+  return list.filter(r => {
+    const d = new Date(r.arrival);
+    if (isNaN(d.getTime())) return true; // unparseable — keep it, safer than silently dropping
+    if (target) {
+      return d.getFullYear() === target.getFullYear() && d.getMonth() === target.getMonth() && d.getDate() === target.getDate();
+    }
+    const diff = d.getTime() - now;
+    return diff >= -bufferMs && diff <= windowMs;
+  });
 }
 
 (function setupDropzone() {
