@@ -115,7 +115,7 @@
   .manage-team-btn {
     display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--cream-border);
     color: var(--ink-soft); font-family: inherit; font-size: 11.5px; font-weight: 600;
-    padding: 8px 12px; border-radius: 7px; cursor: pointer; white-space: nowrap;
+    padding: 8px 12px; border-radius: 7px; cursor: pointer; white-space: nowrap; text-decoration: none;
   }
   .manage-team-btn:hover { border-color: var(--gold); color: var(--gold-dark); }
 
@@ -299,6 +299,10 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Manage Team
     </button>
+    <a class="manage-team-btn" href="confirmation-email-creator.html" target="_blank" rel="noopener">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+      One-Off Email
+    </a>
   </div>
 
   <section class="list" id="list"></section>
@@ -496,10 +500,23 @@ function parseIsoDate(raw) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// Tries both date shapes the various StayNTouch exports use, in order.
-function parseAnyDate(raw) {
-  return parseUsDateTime(raw) || parseIsoDate(raw);
+// Parses a bare "M/D/YYYY" or "MM/DD/YYYY" with no time component — this is
+// what Excel produces if it reformats an ISO date after a CSV gets opened
+// and re-saved there (a real risk even though it shouldn't happen in the
+// normal workflow, since staff upload straight from the saved attachment).
+function parseSlashDateNoTime(raw) {
+  const m = (raw || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const mo = parseInt(m[1], 10), da = parseInt(m[2], 10), yr = parseInt(m[3], 10);
+  const d = new Date(yr, mo - 1, da, 15, 0); // default to 3pm check-in, no time given
+  return isNaN(d.getTime()) ? null : d;
 }
+
+// Tries every date shape the various StayNTouch exports (and Excel re-saves) use, in order.
+function parseAnyDate(raw) {
+  return parseUsDateTime(raw) || parseIsoDate(raw) || parseSlashDateNoTime(raw);
+}
+
 
 // Splits one CSV line respecting quoted fields (so "Adams, Amber" stays one field)
 function parseCsvLine(line) {
