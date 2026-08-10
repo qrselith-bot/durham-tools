@@ -143,6 +143,10 @@
   .team-add-row .btn-primary { padding: 8px 16px; }
 
   .archived-badge { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: var(--cream); border: 1px solid var(--cream-border); color: var(--ink-faint); padding: 3px 8px; border-radius: 20px; margin-left: 8px; }
+  .cancelled-badge { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #EDEBE7; border: 1px solid #D2CEC5; color: #6B665C; padding: 3px 8px; border-radius: 20px; margin-left: 8px; }
+  .card.cancelled-card { background: #F2F0EB; border-color: #DDD8CC; opacity: 0.6; }
+  .card.cancelled-card .card-name { text-decoration: line-through; }
+  .card.cancelled-card:hover { opacity: 0.85; }
   .search-results-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold-dark); font-weight: 700; margin: 6px 4px 10px; }
 
   .day-section { margin-bottom: 16px; }
@@ -1171,9 +1175,9 @@ function cardHtml(r) {
   }
   const contactRow = '<div class="contact-row">' + contactBits.join('') + '</div>';
 
-  return '<div class="card' + (isUrgent ? ' urgent' : '') + '">' +
+  return '<div class="card' + (isUrgent ? ' urgent' : '') + (r.status === 'cancelled' ? ' cancelled-card' : '') + '">' +
     '<div class="card-top">' +
-      '<div><div class="card-name">' + escapeHtml(r.guest) + (r.archived ? '<span class="archived-badge">Past arrival</span>' : '') + '</div><div class="card-conf">Conf #' + escapeHtml(r.confirmNo) + '</div>' + contactRow + '</div>' +
+      '<div><div class="card-name">' + escapeHtml(r.guest) + (r.archived ? '<span class="archived-badge">Past arrival</span>' : '') + (r.status === 'cancelled' ? '<span class="cancelled-badge">Cancelled</span>' : '') + '</div><div class="card-conf">Conf #' + escapeHtml(r.confirmNo) + '</div>' + contactRow + '</div>' +
       '<div class="card-arrival">' + formatArrival(r.arrival) + '<span class="rel' + (isUrgent ? ' overdue' : '') + '">' + rel.text + '</span></div>' +
     '</div>' +
     '<div class="chip-row">' + chips.join('') + '</div>' +
