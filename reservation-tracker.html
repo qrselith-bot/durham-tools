@@ -197,6 +197,7 @@
   .status-btn[data-status="voicemail"].active { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); }
   .status-btn[data-status="follow_up"].active { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
   .status-btn[data-status="no_phone_email"].active { background: #EFE9F5; border-color: #D3C2E8; color: #6B4B9A; }
+  .status-btn[data-status="no_contact"].active { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
   .status-btn[data-status="cancelled"].active { background: #EDEBE7; border-color: #D2CEC5; color: #6B665C; text-decoration: line-through; }
 
   .email-panel { margin-top: 10px; background: var(--cream); border: 1px solid var(--cream-border); border-radius: 6px; padding: 10px 12px; }
@@ -331,8 +332,8 @@
 
 <script>
 const API_BASE = 'https://durham-proxy.qrselith.workers.dev';
-let STAFF = ['Christena','Remy','Jasmine','Lashonda','Mason','Tyler','Rodney','Julius']; // replaced by loadStaff() on init
-const STATUS_LABELS = { confirmed: 'Confirmed', no_answer: 'No Answer', voicemail: 'Voicemail', follow_up: 'Follow Up', no_phone_email: 'No Phone – Email', cancelled: 'Cancelled' };
+let STAFF = ['Gary','Remy','Jasmine','Lashonda','Mason','Tyler','Rodney','Julius']; // replaced by loadStaff() on init
+const STATUS_LABELS = { confirmed: 'Confirmed', no_answer: 'No Answer', voicemail: 'Voicemail', follow_up: 'Follow Up', no_phone_email: 'No Phone – Email', no_contact: 'No Contact Info', cancelled: 'Cancelled' };
 
 let reservations = [];
 let searchResults = [];
@@ -1177,7 +1178,7 @@ function cardHtml(r) {
     '</div>' +
     '<div class="chip-row">' + chips.join('') + '</div>' +
     '<div class="status-row">' +
-      ['confirmed','no_answer','voicemail','follow_up','no_phone_email','cancelled'].map(s =>
+      ['confirmed','no_answer','voicemail','follow_up','no_phone_email','no_contact','cancelled'].map(s =>
         '<button class="status-btn' + (r.status === s ? ' active' : '') + '" data-status="' + s + '" onclick="setStatus(\'' + r.confirmNo + '\',\'' + s + '\')">' + STATUS_LABELS[s] + '</button>'
       ).join('') +
     '</div>' +
