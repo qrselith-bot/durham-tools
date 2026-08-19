@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmation Email Creator — The Durham Hotel</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23C9A84C'/%3E%3Cpath d='M4 6h16c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8c0-1.1.9-2 2-2z' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M3 8l9 6 9-6' fill='none' stroke='white' stroke-width='1.6'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#C9A84C">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-dark: #9A7A2E;
+    --cream: #FAFAF8;
+    --cream-border: #E8E4DA;
+    --ink: #1A1A1A;
+    --ink-soft: #3D3D3D;
+    --ink-faint: #8A8A85;
+    --green-bg: #EAF4EC;
+    --green-border: #BFDFC7;
+    --green-text: #2E7D40;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #F5F3EE;
+    color: var(--ink);
+  }
+  .app { max-width: 760px; margin: 0 auto; padding: 24px 18px 80px; }
+
+  header.top { margin-bottom: 20px; }
+  header.top h1 { font-size: 20px; margin: 0 0 3px; }
+  header.top p { margin: 0; font-size: 12.5px; color: var(--ink-faint); }
+
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel { background: #fff; border: 1px solid var(--cream-border); border-radius: 8px; padding: 18px; }
+  .panel h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold-dark); margin: 0 0 14px; font-weight: 700; }
+
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; }
+  .field input, .field textarea {
+    width: 100%; font-family: inherit; font-size: 13.5px; padding: 8px 10px;
+    border: 1px solid var(--cream-border); border-radius: 6px; background: var(--cream); color: var(--ink); outline: none;
+  }
+  .field input:focus, .field textarea:focus { border-color: var(--gold); background: #fff; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+
+  .preview-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-faint); font-weight: 700; margin-bottom: 6px; }
+  .preview-box { background: var(--cream); border: 1px solid var(--cream-border); border-radius: 6px; padding: 10px 12px; font-size: 13px; color: var(--ink); white-space: pre-wrap; margin-bottom: 14px; min-height: 20px; }
+  .preview-box.body { min-height: 220px; line-height: 1.5; }
+
+  .btn-primary {
+    display: block; width: 100%; text-align: center; text-decoration: none;
+    background: var(--gold); color: #fff; border: none; font-size: 13.5px; font-weight: 700;
+    padding: 11px 18px; border-radius: 7px; cursor: pointer; font-family: inherit; margin-bottom: 8px;
+  }
+  .btn-primary:hover { background: var(--gold-dark); }
+  .btn-primary:disabled { background: #D8D3C4; cursor: not-allowed; pointer-events: none; }
+  .btn-primary.sent { background: var(--green-text); }
+
+  .copy-row { display: flex; gap: 8px; }
+  .copy-btn {
+    flex: 1; font-family: inherit; font-size: 12px; font-weight: 600; background: #fff;
+    border: 1px solid var(--cream-border); color: var(--ink-soft); padding: 8px 10px; border-radius: 6px; cursor: pointer;
+  }
+  .copy-btn:hover { border-color: var(--gold); color: var(--gold-dark); }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #141414; color: #fff; font-size: 12.5px; font-weight: 500;
+    padding: 11px 20px; border-radius: 7px; opacity: 0; pointer-events: none;
+    transition: opacity .25s; z-index: 50;
+  }
+  #toast.show { opacity: 1; }
+
+  .hint { font-size: 11px; color: var(--ink-faint); margin-top: 4px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <h1>Confirmation Email Creator</h1>
+    <p>The Durham Hotel — for one-off requests, not tied to the call tracker</p>
+  </header>
+
+  <div class="layout">
+
+    <div class="panel">
+      <h2>Reservation Details</h2>
+
+      <div class="field">
+        <label for="f-guest">Guest Name</label>
+        <input type="text" id="f-guest" placeholder="Sarah Whitfield" oninput="renderPreview()">
+      </div>
+
+      <div class="field">
+        <label for="f-email">Guest Email</label>
+        <input type="email" id="f-email" placeholder="guest@example.com" oninput="renderPreview()">
+      </div>
+
+      <div class="field">
+        <label for="f-conf">Confirmation Number</label>
+        <input type="text" id="f-conf" placeholder="118501" oninput="renderPreview()">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="f-arrival">Arrival Date</label>
+          <input type="date" id="f-arrival" oninput="renderPreview()">
+        </div>
+        <div class="field">
+          <label for="f-departure">Departure Date</label>
+          <input type="date" id="f-departure" oninput="renderPreview()">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="f-roomtype">Room Type</label>
+          <input type="text" id="f-roomtype" placeholder="Deluxe King" oninput="renderPreview()">
+        </div>
+        <div class="field">
+          <label for="f-nights">Nights</label>
+          <input type="text" id="f-nights" placeholder="2" oninput="renderPreview()">
+        </div>
+      </div>
+
+      <p class="hint">Nights fills in automatically from the two dates, but you can overwrite it by hand if needed.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Email Preview</h2>
+
+      <div class="preview-label">Subject</div>
+      <div class="preview-box" id="preview-subject">—</div>
+
+      <div class="preview-label">Body</div>
+      <div class="preview-box body" id="preview-body">Fill in the details on the left to see the email take shape here.</div>
+
+      <button class="btn-primary" id="send-btn" disabled onclick="sendEmail()">Open Pre-Filled Email</button>
+      <div class="copy-row">
+        <button class="copy-btn" onclick="copyField('subject')">Copy Subject</button>
+        <button class="copy-btn" onclick="copyField('body')">Copy Body</button>
+      </div>
+      <p class="hint">"Open Pre-Filled Email" needs a guest email address entered — otherwise, copy the subject and body into a new message by hand.</p>
+    </div>
+
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  // parse as local date (not UTC) so it doesn't shift a day depending on timezone
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+function nightsBetween(arrivalIso, departureIso) {
+  if (!arrivalIso || !departureIso) return null;
+  const [ay, am, ad] = arrivalIso.split('-').map(Number);
+  const [dy, dm, dd] = departureIso.split('-').map(Number);
+  const a = new Date(ay, am - 1, ad);
+  const d = new Date(dy, dm - 1, dd);
+  const diff = Math.round((d - a) / 86400000);
+  return diff > 0 ? diff : null;
+}
+
+// Auto-fill Nights whenever both dates are set, unless the person has
+// already typed something of their own into that field.
+let nightsManuallyEdited = false;
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-nights').addEventListener('input', () => { nightsManuallyEdited = true; });
+});
+
+function buildEmailTemplate() {
+  const guest = document.getElementById('f-guest').value.trim();
+  const firstName = guest.split(' ')[0] || 'there';
+  const confirmNo = document.getElementById('f-conf').value.trim();
+  const arrivalIso = document.getElementById('f-arrival').value;
+  const departureIso = document.getElementById('f-departure').value;
+  const roomType = document.getElementById('f-roomtype').value.trim();
+
+  if (!nightsManuallyEdited) {
+    const auto = nightsBetween(arrivalIso, departureIso);
+    if (auto) document.getElementById('f-nights').value = auto;
+  }
+  const nights = document.getElementById('f-nights').value.trim();
+
+  const arrivalStr = formatDate(arrivalIso);
+  const departureStr = formatDate(departureIso);
+
+  const subject = 'Your Upcoming Stay at The Durham Hotel' + (confirmNo ? ' — Confirmation #' + confirmNo : '');
+  const body = 'Hi ' + firstName + ',\n\n' +
+    'We\'re looking forward to welcoming you to The Durham Hotel! This is a quick note to confirm the details of your upcoming reservation:\n\n' +
+    (confirmNo ? 'Confirmation #: ' + confirmNo + '\n' : '') +
+    (arrivalStr ? 'Arrival: ' + arrivalStr + ' (check-in at 3:00 PM)\n' : '') +
+    (departureStr ? 'Departure: ' + departureStr + '\n' : '') +
+    (roomType ? 'Room Type: ' + roomType + '\n' : '') +
+    (nights ? 'Nights: ' + nights + '\n' : '') +
+    '\nIf any of these details need to change, or you have questions before you arrive, just reply to this email.\n\n' +
+    'We look forward to seeing you soon!\n\n' +
+    'The Durham Hotel Front Office';
+
+  return { subject, body };
+}
+
+function renderPreview() {
+  const tpl = buildEmailTemplate();
+  document.getElementById('preview-subject').textContent = tpl.subject;
+  document.getElementById('preview-body').textContent = tpl.body;
+
+  const email = document.getElementById('f-email').value.trim();
+  const sendBtn = document.getElementById('send-btn');
+  sendBtn.disabled = !email;
+  sendBtn.textContent = email ? ('Open Pre-Filled Email to ' + email) : 'Open Pre-Filled Email';
+  sendBtn.classList.remove('sent');
+}
+
+function sendEmail() {
+  const email = document.getElementById('f-email').value.trim();
+  if (!email) return;
+  const tpl = buildEmailTemplate();
+  const href = 'mailto:' + encodeURIComponent(email) +
+    '?subject=' + encodeURIComponent(tpl.subject) +
+    '&body=' + encodeURIComponent(tpl.body);
+  window.location.href = href;
+  const btn = document.getElementById('send-btn');
+  btn.classList.add('sent');
+  btn.textContent = 'Opened — check your mail app';
+  setTimeout(renderPreview, 3000);
+}
+
+function copyField(which) {
+  const tpl = buildEmailTemplate();
+  const text = which === 'subject' ? tpl.subject : tpl.body;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast((which === 'subject' ? 'Subject' : 'Body') + ' copied');
+  }).catch(() => showToast('Could not copy — select the text manually'));
+}
+
+renderPreview();
+</script>
+</body>
+</html>
