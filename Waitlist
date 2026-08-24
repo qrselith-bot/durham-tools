@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Durham Hotel — Waitlist</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #FAFAF8; color: #1A1A1A; font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+  #header { background: #fff; border-bottom: 2px solid #C9A84C; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  #header-inner { max-width: 1180px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  #logo { width: 36px; height: 36px; background: #C9A84C; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; border-radius: 2px; flex-shrink: 0; }
+  #logo-text { font-size: 15px; font-weight: 600; color: #141414; line-height: 1.2; }
+  #logo-text span { display: block; font-size: 9px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; color: #6B6B6B; margin-top: 2px; }
+  #header-spacer { flex: 1; }
+  #add-btn { background: #C9A84C; color: #fff; border: none; font-size: 12px; font-weight: 600; padding: 9px 16px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  #add-btn:hover { background: #9A7A2E; }
+
+  #tabbar { background: #fff; border-bottom: 1px solid #E8E4DA; }
+  #tabbar-inner { max-width: 1180px; margin: 0 auto; display: flex; padding: 0 24px; }
+  .tab { background: none; border: none; border-bottom: 2px solid transparent; color: #6B6B6B; font-family: inherit; font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; padding: 12px 16px; cursor: pointer; white-space: nowrap; margin-bottom: -1px; transition: all .15s; display: flex; align-items: center; gap: 7px; }
+  .tab:hover { color: #1A1A1A; }
+  .tab.active { color: #9A7A2E; border-bottom-color: #C9A84C; font-weight: 600; }
+  .tab-count { background: #F2F2F0; color: #6B6B6B; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 20px; }
+  .tab.active .tab-count { background: #F7F0DC; color: #9A7A2E; }
+
+  #main { max-width: 1180px; margin: 0 auto; padding: 24px; }
+
+  #staff-banner { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+  .sb-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #9A7A2E; display: block; margin-bottom: 6px; }
+  .sb-select { border: 1px solid #E8E4DA; border-radius: 5px; padding: 8px 10px; font-family: inherit; font-size: 13px; color: #1A1A1A; background: #FAFAF8; outline: none; min-width: 170px; cursor: pointer; }
+  .sb-select:focus { border-color: #C9A84C; background: #fff; }
+
+  #filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+  .filter-select, .filter-input { border: 1px solid #E8E4DA; border-radius: 5px; padding: 8px 10px; font-family: inherit; font-size: 12px; color: #1A1A1A; background: #fff; outline: none; }
+  .filter-select:focus, .filter-input:focus { border-color: #C9A84C; }
+  #search-input { flex: 1; min-width: 180px; }
+
+  .date-group { margin-bottom: 22px; }
+  .date-group-header { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #9A7A2E; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #E8E4DA; display: flex; align-items: center; justify-content: space-between; }
+  .date-group-header .dg-past { color: #B23B3B; }
+
+  .wl-card { background: #fff; border: 1px solid #E8E4DA; border-radius: 8px; margin-bottom: 10px; overflow: hidden; transition: box-shadow .15s; }
+  .wl-card.expanded { box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+  .wl-card-head { padding: 14px 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; flex-wrap: wrap; }
+  .wl-guest { font-size: 15px; font-weight: 600; color: #141414; min-width: 140px; }
+  .wl-dates { font-size: 12px; color: #6B6B6B; min-width: 150px; }
+  .wl-meta { font-size: 12px; color: #6B6B6B; display: flex; gap: 12px; flex-wrap: wrap; }
+  .wl-meta strong { color: #1A1A1A; font-weight: 600; }
+  .wl-spacer { flex: 1; }
+  .wl-rate { font-size: 13px; font-weight: 700; color: #9A7A2E; }
+
+  .status-badge { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+  .status-waiting { background: #F7F0DC; color: #9A7A2E; border: 1px solid #E8D28A; }
+  .status-contacted { background: #E6EEF5; color: #2E5C8A; border: 1px solid #C3D8EC; }
+  .status-booked { background: #E5F2E8; color: #2E7D45; border: 1px solid #B9E0C4; }
+  .status-declined { background: #F2F2F0; color: #6B6B6B; border: 1px solid #E0E0DC; }
+  .status-expired { background: #FBEAEA; color: #B23B3B; border: 1px solid #F0C6C6; }
+
+  .wl-card-body { padding: 0 18px 18px; border-top: 1px solid #F2F2F0; display: none; }
+  .wl-card.expanded .wl-card-body { display: block; }
+  .wl-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; padding: 16px 0; }
+  .wl-detail-item .dl { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #9A7A2E; margin-bottom: 3px; }
+  .wl-detail-item .dv { font-size: 13px; color: #1A1A1A; }
+  .wl-detail-item .dv a { color: #2E5C8A; text-decoration: none; }
+  .wl-notes { background: #FAFAF8; border: 1px solid #F2F2F0; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #4A4A4A; margin-bottom: 16px; }
+
+  .wl-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .abtn { font-family: inherit; font-size: 11px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; border: 1px solid #E8E4DA; background: #fff; color: #1A1A1A; }
+  .abtn:hover { background: #FAFAF8; }
+  .abtn-book { border-color: #B9E0C4; color: #2E7D45; }
+  .abtn-book:hover { background: #E5F2E8; }
+  .abtn-decline { border-color: #E0E0DC; color: #6B6B6B; }
+  .abtn-decline:hover { background: #F2F2F0; }
+  .abtn-delete { border-color: #F0C6C6; color: #B23B3B; margin-left: auto; }
+  .abtn-delete:hover { background: #FBEAEA; }
+
+  .log-section { margin-top: 6px; }
+  .log-title { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #6B6B6B; margin-bottom: 8px; }
+  .log-entry { font-size: 12px; color: #4A4A4A; padding: 7px 0; border-bottom: 1px solid #F2F2F0; display: flex; gap: 8px; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-when { color: #9A9A9A; white-space: nowrap; }
+  .log-form { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .log-form select, .log-form input { border: 1px solid #E8E4DA; border-radius: 5px; padding: 7px 10px; font-family: inherit; font-size: 12px; outline: none; }
+  .log-form input[type=text] { flex: 1; min-width: 150px; }
+  .log-form button { background: #C9A84C; color: #fff; border: none; font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 5px; cursor: pointer; }
+  .log-form button:hover { background: #9A7A2E; }
+
+  #empty-state { text-align: center; padding: 60px 20px; color: #9A9A9A; }
+  #empty-state .es-title { font-size: 15px; font-weight: 600; color: #6B6B6B; margin-bottom: 6px; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(20,20,20,0.4); display: none; align-items: flex-start; justify-content: center; z-index: 200; overflow-y: auto; padding: 40px 20px; }
+  .overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 10px; width: 100%; max-width: 560px; padding: 26px 28px; }
+  .modal h2 { font-size: 18px; font-weight: 700; color: #141414; margin-bottom: 4px; }
+  .modal .sub { font-size: 12px; color: #6B6B6B; margin-bottom: 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-row.single { grid-template-columns: 1fr; }
+  .fld label { display: block; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #9A7A2E; margin-bottom: 5px; }
+  .fld input, .fld select, .fld textarea { width: 100%; border: 1px solid #E8E4DA; border-radius: 5px; padding: 9px 11px; font-family: inherit; font-size: 13px; color: #1A1A1A; background: #FAFAF8; outline: none; }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: #C9A84C; background: #fff; }
+  .fld textarea { resize: vertical; min-height: 60px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .mbtn-primary { background: #C9A84C; color: #fff; border: none; font-family: inherit; font-size: 12px; font-weight: 600; padding: 10px 22px; border-radius: 5px; cursor: pointer; }
+  .mbtn-primary:hover { background: #9A7A2E; }
+  .mbtn-cancel { background: #fff; color: #6B6B6B; border: 1px solid #E8E4DA; font-family: inherit; font-size: 12px; padding: 10px 18px; border-radius: 5px; cursor: pointer; }
+
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1A1A1A; color: #fff; font-size: 13px; padding: 12px 20px; border-radius: 6px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 300; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 640px) {
+    .form-row { grid-template-columns: 1fr; }
+    .wl-card-head { flex-direction: column; align-items: flex-start; }
+    .wl-spacer { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="header-inner">
+    <div id="logo">D</div>
+    <div id="logo-text">The Durham Hotel<span>Sold-Out Date Waitlist</span></div>
+    <div id="header-spacer"></div>
+    <button id="add-btn" onclick="openAddModal()">+ Add to Waitlist</button>
+  </div>
+</div>
+
+<div id="tabbar">
+  <div id="tabbar-inner">
+    <button class="tab active" data-tab="active" onclick="switchTab('active')">Active <span class="tab-count" id="count-active">0</span></button>
+    <button class="tab" data-tab="history" onclick="switchTab('history')">History <span class="tab-count" id="count-history">0</span></button>
+    <button class="tab" data-tab="team" onclick="switchTab('team')">Team</button>
+  </div>
+</div>
+
+<div id="main">
+
+  <div id="staff-banner">
+    <div>
+      <span class="sb-label">You're signed in as</span>
+      <select class="sb-select" id="staff-select"></select>
+    </div>
+  </div>
+
+  <div id="view-active">
+    <div id="filter-bar">
+      <input type="text" id="search-input" class="filter-input" placeholder="Search guest name or phone..." oninput="renderActive()">
+      <select id="filter-roomtype" class="filter-select" onchange="renderActive()">
+        <option value="">All room types</option>
+        <option value="King">King</option>
+        <option value="Queen/Queen">Queen/Queen</option>
+        <option value="Suite">Suite</option>
+        <option value="ADA">ADA Accessible</option>
+        <option value="Any">Any room type</option>
+      </select>
+      <select id="filter-status" class="filter-select" onchange="renderActive()">
+        <option value="">Waiting + Contacted</option>
+        <option value="waiting">Waiting only</option>
+        <option value="contacted">Contacted only</option>
+      </select>
+    </div>
+    <div id="active-list"></div>
+  </div>
+
+  <div id="view-history" style="display:none">
+    <div id="filter-bar">
+      <select id="history-filter-status" class="filter-select" onchange="renderHistory()">
+        <option value="">All (Booked, Declined, Expired)</option>
+        <option value="booked">Booked</option>
+        <option value="declined">Declined</option>
+        <option value="expired">Expired</option>
+      </select>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <div id="view-team" style="display:none">
+    <div class="wl-card" style="padding:20px;">
+      <h2 style="font-size:15px;margin-bottom:14px;">Manage Team Roster</h2>
+      <div id="team-list" style="margin-bottom:16px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="new-team-name" class="filter-input" placeholder="Add staff name..." style="flex:1;">
+        <button class="mbtn-primary" onclick="addTeamMember()">Add</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add Entry Modal -->
+<div class="overlay" id="add-overlay">
+  <div class="modal">
+    <h2>Add to Waitlist</h2>
+    <div class="sub">Guest wants a date range that's currently sold out.</div>
+    <div class="form-row">
+      <div class="fld"><label>Guest Name *</label><input type="text" id="f-name"></div>
+      <div class="fld"><label>Phone *</label><input type="tel" id="f-phone" placeholder="(919) 555-0100"></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>Email</label><input type="email" id="f-email"></div>
+      <div class="fld"><label>Party Size</label><input type="number" id="f-party" min="1" value="1"></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>Check-In *</label><input type="date" id="f-checkin"></div>
+      <div class="fld"><label>Check-Out *</label><input type="date" id="f-checkout"></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>Room Type Preference</label>
+        <select id="f-roomtype">
+          <option value="Any">Any room type</option>
+          <option value="King">King</option>
+          <option value="Queen/Queen">Queen/Queen</option>
+          <option value="Suite">Suite</option>
+          <option value="ADA">ADA Accessible</option>
+        </select>
+      </div>
+      <div class="fld"><label>Max Rate Willing to Pay</label><input type="text" id="f-rate" placeholder="$189/night"></div>
+    </div>
+    <div class="form-row single">
+      <div class="fld"><label>Notes / Preferences</label><textarea id="f-notes" placeholder="High floor, quiet side, celebrating anniversary, etc."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="mbtn-primary" onclick="submitEntry()">Add to Waitlist</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIG — update WORKER_BASE once the backend routes are live
+   ============================================================ */
+const WORKER_BASE = "https://durham-proxy.qrselith.workers.dev";
+
+let entries = [];
+let team = [];
+let currentStaff = "";
+let activeTab = "active";
+let expandedId = null;
+
+/* ---------- Init ---------- */
+async function init() {
+  await Promise.all([loadEntries(), loadTeam()]);
+  renderStaffSelect();
+  renderActive();
+  renderHistory();
+  renderTeam();
+}
+
+/* ---------- Data load/save (KV via Worker) ---------- */
+async function loadEntries() {
+  try {
+    const res = await fetch(`${WORKER_BASE}/waitlist/list`);
+    const data = await res.json();
+    entries = data.entries || [];
+  } catch (e) {
+    console.error("Failed to load waitlist", e);
+    entries = [];
+  }
+}
+
+async function loadTeam() {
+  try {
+    const res = await fetch(`${WORKER_BASE}/waitlist/roster`);
+    const data = await res.json();
+    team = data.roster || [];
+  } catch (e) {
+    console.error("Failed to load roster", e);
+    team = [];
+  }
+}
+
+async function saveTeam() {
+  await fetch(`${WORKER_BASE}/waitlist/roster`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ roster: team })
+  });
+}
+
+async function apiAdd(entry) {
+  const res = await fetch(`${WORKER_BASE}/waitlist/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry)
+  });
+  return res.json();
+}
+
+async function apiUpdate(entry) {
+  await fetch(`${WORKER_BASE}/waitlist/update`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry)
+  });
+}
+
+async function apiDelete(id) {
+  await fetch(`${WORKER_BASE}/waitlist/delete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id })
+  });
+}
+
+/* ---------- Staff select ---------- */
+function renderStaffSelect() {
+  const sel = document.getElementById("staff-select");
+  sel.innerHTML = team.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+  const saved = localStorage.getItem("waitlist-staff");
+  if (saved && team.includes(saved)) sel.value = saved;
+  currentStaff = sel.value || team[0] || "";
+  sel.onchange = () => { currentStaff = sel.value; localStorage.setItem("waitlist-staff", currentStaff); };
+}
+
+/* ---------- Tabs ---------- */
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+  document.getElementById("view-active").style.display = tab === "active" ? "block" : "none";
+  document.getElementById("view-history").style.display = tab === "history" ? "block" : "none";
+  document.getElementById("view-team").style.display = tab === "team" ? "block" : "none";
+}
+
+/* ---------- Helpers ---------- */
+function esc(s) { return (s || "").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmtDate(iso) {
+  if (!iso) return "";
+  const [y,m,d] = iso.split("-").map(Number);
+  return new Date(y, m-1, d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function isPast(iso) { return iso < todayISO(); }
+function nights(inD, outD) {
+  const a = new Date(inD), b = new Date(outD);
+  return Math.max(1, Math.round((b - a) / 86400000));
+}
+
+/* ---------- Active list ---------- */
+function renderActive() {
+  const search = document.getElementById("search-input").value.toLowerCase();
+  const roomFilter = document.getElementById("filter-roomtype").value;
+  const statusFilter = document.getElementById("filter-status").value;
+
+  let list = entries.filter(e => {
+    if (e.status !== "waiting" && e.status !== "contacted") return false;
+    if (statusFilter && e.status !== statusFilter) return false;
+    if (roomFilter && e.roomType !== roomFilter) return false;
+    if (search && !(e.guestName.toLowerCase().includes(search) || (e.phone||"").includes(search))) return false;
+    return true;
+  });
+
+  document.getElementById("count-active").textContent = entries.filter(e => e.status === "waiting" || e.status === "contacted").length;
+
+  list.sort((a,b) => a.checkIn.localeCompare(b.checkIn));
+
+  const container = document.getElementById("active-list");
+  if (list.length === 0) {
+    container.innerHTML = `<div id="empty-state"><div class="es-title">No one on the active waitlist</div>When a date sells out, add the guest here so you can reach them if it opens up.</div>`;
+    return;
+  }
+
+  const groups = {};
+  list.forEach(e => { (groups[e.checkIn] = groups[e.checkIn] || []).push(e); });
+
+  container.innerHTML = Object.keys(groups).sort().map(date => {
+    const past = isPast(date);
+    return `
+      <div class="date-group">
+        <div class="date-group-header">
+          <span class="${past ? 'dg-past' : ''}">${fmtDate(date)}${past ? " — date has passed" : ""}</span>
+          <span>${groups[date].length} waiting</span>
+        </div>
+        ${groups[date].map(e => cardHTML(e)).join("")}
+      </div>`;
+  }).join("");
+}
+
+function renderHistory() {
+  const statusFilter = document.getElementById("history-filter-status").value;
+  let list = entries.filter(e => ["booked","declined","expired"].includes(e.status));
+  if (statusFilter) list = list.filter(e => e.status === statusFilter);
+  document.getElementById("count-history").textContent = entries.filter(e => ["booked","declined","expired"].includes(e.status)).length;
+  list.sort((a,b) => b.checkIn.localeCompare(a.checkIn));
+
+  const container = document.getElementById("history-list");
+  if (list.length === 0) {
+    container.innerHTML = `<div id="empty-state"><div class="es-title">Nothing here yet</div>Booked, declined, and expired entries will show up here.</div>`;
+    return;
+  }
+  container.innerHTML = list.map(e => cardHTML(e)).join("");
+}
+
+function cardHTML(e) {
+  const expanded = expandedId === e.id;
+  const past = isPast(e.checkIn) && (e.status === "waiting" || e.status === "contacted");
+  const statusLabel = past ? "expired" : e.status;
+  return `
+    <div class="wl-card ${expanded ? 'expanded' : ''}">
+      <div class="wl-card-head" onclick="toggleCard('${e.id}')">
+        <div class="wl-guest">${esc(e.guestName)}</div>
+        <div class="wl-dates">${fmtDate(e.checkIn)} → ${fmtDate(e.checkOut)} <span style="color:#9A9A9A;">(${nights(e.checkIn,e.checkOut)}n)</span></div>
+        <div class="wl-meta"><strong>${esc(e.roomType || "Any")}</strong> · ${e.partySize || 1} guest${e.partySize == 1 ? "" : "s"}</div>
+        <div class="wl-spacer"></div>
+        ${e.maxRate ? `<div class="wl-rate">${esc(e.maxRate)}</div>` : ""}
+        <span class="status-badge status-${statusLabel}">${statusLabel}</span>
+      </div>
+      <div class="wl-card-body">
+        <div class="wl-detail-grid">
+          <div class="wl-detail-item"><div class="dl">Phone</div><div class="dv"><a href="tel:${esc(e.phone)}">${esc(e.phone)}</a></div></div>
+          <div class="wl-detail-item"><div class="dl">Email</div><div class="dv">${e.email ? `<a href="mailto:${esc(e.email)}">${esc(e.email)}</a>` : "—"}</div></div>
+          <div class="wl-detail-item"><div class="dl">Added</div><div class="dv">${fmtDate(e.dateAdded)} by ${esc(e.addedBy)}</div></div>
+        </div>
+        ${e.notes ? `<div class="wl-notes">${esc(e.notes)}</div>` : ""}
+        ${(e.status === "waiting" || e.status === "contacted") ? `
+          <div class="wl-actions">
+            <button class="abtn abtn-book" onclick="quickStatus('${e.id}','booked')">Mark Booked</button>
+            <button class="abtn abtn-decline" onclick="quickStatus('${e.id}','declined')">Mark Declined</button>
+            <button class="abtn abtn-delete" onclick="deleteEntry('${e.id}')">Delete</button>
+          </div>
+        ` : `
+          <div class="wl-actions">
+            <button class="abtn abtn-delete" onclick="deleteEntry('${e.id}')">Delete</button>
+          </div>
+        `}
+        <div class="log-section">
+          <div class="log-title">Contact Log</div>
+          ${(e.log && e.log.length) ? e.log.map(l => `
+            <div class="log-entry"><span class="log-when">${fmtDate(l.date)}</span><span><strong>${esc(l.staff)}</strong> — ${esc(l.outcome)}${l.note ? `: ${esc(l.note)}` : ""}</span></div>
+          `).join("") : `<div style="font-size:12px;color:#9A9A9A;">No contact attempts logged yet.</div>`}
+          ${(e.status === "waiting" || e.status === "contacted") ? `
+            <div class="log-form">
+              <select id="outcome-${e.id}">
+                <option>Reached — interested</option>
+                <option>Reached — no longer needed</option>
+                <option>Left voicemail</option>
+                <option>No answer</option>
+                <option>Emailed</option>
+              </select>
+              <input type="text" id="note-${e.id}" placeholder="Note (optional)">
+              <button onclick="logContact('${e.id}')">Log</button>
+            </div>
+          ` : ""}
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleCard(id) {
+  expandedId = expandedId === id ? null : id;
+  renderActive();
+  renderHistory();
+}
+
+/* ---------- Actions ---------- */
+async function quickStatus(id, status) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  e.status = status;
+  e.log = e.log || [];
+  e.log.unshift({ date: todayISO(), staff: currentStaff, outcome: status === "booked" ? "Booked the room" : "Marked declined" });
+  await apiUpdate(e);
+  renderActive(); renderHistory();
+  toast(status === "booked" ? "Marked as booked" : "Marked as declined");
+}
+
+async function logContact(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  const outcome = document.getElementById(`outcome-${id}`).value;
+  const note = document.getElementById(`note-${id}`).value.trim();
+  e.log = e.log || [];
+  e.log.unshift({ date: todayISO(), staff: currentStaff, outcome, note });
+  if (e.status === "waiting") e.status = "contacted";
+  await apiUpdate(e);
+  renderActive(); renderHistory();
+  toast("Contact logged");
+}
+
+async function deleteEntry(id) {
+  if (!confirm("Delete this waitlist entry? This can't be undone.")) return;
+  entries = entries.filter(e => e.id !== id);
+  await apiDelete(id);
+  renderActive(); renderHistory();
+  toast("Entry deleted");
+}
+
+/* ---------- Add modal ---------- */
+function openAddModal() {
+  ["f-name","f-phone","f-email","f-checkin","f-checkout","f-rate","f-notes"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("f-party").value = 1;
+  document.getElementById("f-roomtype").value = "Any";
+  const in3 = new Date(); in3.setDate(in3.getDate()+1);
+  document.getElementById("add-overlay").classList.add("open");
+}
+function closeAddModal() { document.getElementById("add-overlay").classList.remove("open"); }
+
+async function submitEntry() {
+  const name = document.getElementById("f-name").value.trim();
+  const phone = document.getElementById("f-phone").value.trim();
+  const checkin = document.getElementById("f-checkin").value;
+  const checkout = document.getElementById("f-checkout").value;
+  if (!name || !phone || !checkin || !checkout) {
+    toast("Name, phone, and both dates are required"); return;
+  }
+  if (checkout <= checkin) { toast("Check-out must be after check-in"); return; }
+
+  const entry = {
+    id: crypto.randomUUID(),
+    guestName: name,
+    phone,
+    email: document.getElementById("f-email").value.trim(),
+    checkIn: checkin,
+    checkOut: checkout,
+    roomType: document.getElementById("f-roomtype").value,
+    partySize: parseInt(document.getElementById("f-party").value) || 1,
+    maxRate: document.getElementById("f-rate").value.trim(),
+    notes: document.getElementById("f-notes").value.trim(),
+    status: "waiting",
+    addedBy: currentStaff,
+    dateAdded: todayISO(),
+    log: []
+  };
+  entries.unshift(entry);
+  closeAddModal();
+  renderActive(); renderHistory();
+  await apiAdd(entry);
+  toast("Added to waitlist");
+}
+
+/* ---------- Team management ---------- */
+function renderTeam() {
+  document.getElementById("team-list").innerHTML = team.map((n,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F2F2F0;">
+      <span style="flex:1;">${esc(n)}</span>
+      <button class="abtn abtn-delete" onclick="removeTeamMember(${i})">Remove</button>
+    </div>
+  `).join("") || `<div style="font-size:12px;color:#9A9A9A;">No staff added yet.</div>`;
+}
+async function addTeamMember() {
+  const input = document.getElementById("new-team-name");
+  const name = input.value.trim();
+  if (!name || team.includes(name)) return;
+  team.push(name);
+  input.value = "";
+  await saveTeam();
+  renderTeam(); renderStaffSelect();
+}
+async function removeTeamMember(i) {
+  team.splice(i,1);
+  await saveTeam();
+  renderTeam(); renderStaffSelect();
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+init();
+</script>
+</body>
+</html>
