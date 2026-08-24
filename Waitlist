@@ -254,7 +254,7 @@ async function init() {
 /* ---------- Data load/save (KV via Worker) ---------- */
 async function loadEntries() {
   try {
-    const res = await fetch(`${WORKER_BASE}/waitlist/list`);
+    const res = await fetch(`${WORKER_BASE}/api/waitlist/list`);
     const data = await res.json();
     entries = data.entries || [];
   } catch (e) {
@@ -265,9 +265,9 @@ async function loadEntries() {
 
 async function loadTeam() {
   try {
-    const res = await fetch(`${WORKER_BASE}/waitlist/roster`);
+    const res = await fetch(`${WORKER_BASE}/api/waitlist/staff`);
     const data = await res.json();
-    team = data.roster || [];
+    team = data.staff || [];
   } catch (e) {
     console.error("Failed to load roster", e);
     team = [];
@@ -275,15 +275,15 @@ async function loadTeam() {
 }
 
 async function saveTeam() {
-  await fetch(`${WORKER_BASE}/waitlist/roster`, {
+  await fetch(`${WORKER_BASE}/api/waitlist/staff`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ roster: team })
+    body: JSON.stringify({ staff: team })
   });
 }
 
 async function apiAdd(entry) {
-  const res = await fetch(`${WORKER_BASE}/waitlist/add`, {
+  const res = await fetch(`${WORKER_BASE}/api/waitlist/add`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(entry)
@@ -292,7 +292,7 @@ async function apiAdd(entry) {
 }
 
 async function apiUpdate(entry) {
-  await fetch(`${WORKER_BASE}/waitlist/update`, {
+  await fetch(`${WORKER_BASE}/api/waitlist/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(entry)
@@ -300,7 +300,7 @@ async function apiUpdate(entry) {
 }
 
 async function apiDelete(id) {
-  await fetch(`${WORKER_BASE}/waitlist/delete`, {
+  await fetch(`${WORKER_BASE}/api/waitlist/delete`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id })
