@@ -56,7 +56,7 @@
   .stat-value.c-approved { color: var(--accent); }
   .stat-value.c-denied { color: var(--warn); }
 
-  .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 22px; }
+  .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 22px; flex-wrap: wrap; }
   .tab { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; padding: 10px 18px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; color: var(--text-muted); background: none; border-top: none; border-left: none; border-right: none; transition: color 0.15s; position: relative; }
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
   .tab-badge { display: inline-flex; align-items: center; justify-content: center; background: var(--pending); color: #fff; font-size: 9px; border-radius: 10px; padding: 1px 5px; margin-left: 5px; min-width: 16px; vertical-align: middle; }
@@ -115,12 +115,24 @@
   .bo-reason { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
   /* TEAM ROSTER */
-  .roster-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
-  .roster-item { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 10px 14px; }
-  .roster-name { font-weight: 500; font-size: 14px; }
+  .roster-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .roster-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; }
+  .roster-item-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .roster-name { font-weight: 600; font-size: 14px; }
   .roster-count { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
   .add-member-row { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
   .add-member-row input { flex: 1; }
+
+  .position-tags { display: flex; gap: 6px; margin-top: 8px; }
+  .pos-toggle { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 9px; border-radius: 3px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; }
+  .pos-toggle.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+  .avail-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+  .avail-day-col { display: flex; flex-direction: column; gap: 3px; }
+  .avail-day-label { font-family: var(--mono); font-size: 9px; text-transform: uppercase; text-align: center; color: var(--text-muted); margin-bottom: 2px; }
+  .avail-slot-btn { font-family: var(--mono); font-size: 9px; padding: 4px 2px; border-radius: 3px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; text-align: center; }
+  .avail-slot-btn.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .avail-slot-btn.disabled { opacity: 0.25; cursor: not-allowed; pointer-events: none; }
 
   /* COVERAGE */
   .cov-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
@@ -146,6 +158,47 @@
   .cov-name.pending { background: var(--pending-light); color: var(--pending); }
   .cov-name.denied { background: var(--surface-2); color: var(--text-muted); text-decoration: line-through; }
 
+  /* SHIFT STRENGTH */
+  .threshold-bar { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; }
+  .threshold-field { display: flex; flex-direction: column; gap: 4px; }
+  .threshold-field label { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  .threshold-field input { width: 56px; font-family: var(--mono); font-size: 14px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); text-align: center; }
+  .threshold-field input:focus { border-color: var(--accent); outline: none; }
+
+  .strength-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .strength-table th, .strength-table td { border: 1px solid var(--border); padding: 0; text-align: center; }
+  .strength-table th { background: var(--surface-2); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 10px 6px; font-weight: 500; }
+  .strength-table th.shift-col { text-align: left; padding-left: 14px; min-width: 140px; }
+  .strength-table td.shift-label { text-align: left; padding: 10px 14px; font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-2); }
+  .cell-btn { width: 100%; height: 100%; min-height: 56px; border: none; cursor: pointer; font-family: var(--mono); font-size: 18px; font-weight: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: opacity 0.15s; }
+  .cell-btn:hover { opacity: 0.8; }
+  .cell-btn .thresh { font-size: 9px; color: inherit; opacity: 0.7; font-weight: 400; }
+  .cell-green { background: var(--accent-light); color: var(--accent); }
+  .cell-yellow { background: var(--pending-light); color: var(--pending); }
+  .cell-red { background: var(--warn-light); color: var(--warn); }
+
+  #drilldown { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-top: 18px; }
+  #drilldown h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+  .dd-shift { border-top: 1px solid var(--border); padding: 14px 0; }
+  .dd-shift:first-of-type { border-top: none; padding-top: 0; }
+  .dd-shift-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .dd-shift-name { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  .dd-count { font-family: var(--mono); font-size: 12px; padding: 2px 9px; border-radius: 3px; }
+  .dd-count.green { background: var(--accent-light); color: var(--accent); }
+  .dd-count.yellow { background: var(--pending-light); color: var(--pending); }
+  .dd-count.red { background: var(--warn-light); color: var(--warn); }
+  .dd-people { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dd-person { font-size: 11px; padding: 3px 9px; border-radius: 3px; background: var(--surface-2); color: var(--text); }
+  .dd-empty { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+  .req-preview-card { background: var(--pending-light); border: 1px solid #E8D6A8; border-radius: 6px; padding: 14px 16px; margin-bottom: 10px; }
+  .req-preview-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .req-preview-name { font-weight: 600; font-size: 13px; }
+  .req-preview-dates { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .req-preview-impact { font-size: 11px; margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .impact-chip { font-family: var(--mono); padding: 2px 8px; border-radius: 3px; }
+  .req-preview-actions { display: flex; gap: 6px; margin-top: 10px; }
+
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
   .modal-overlay.open { display: flex; }
   .modal { background: var(--surface); border-radius: 8px; padding: 26px; width: 400px; max-width: 95vw; }
@@ -166,6 +219,9 @@
     .req-actions { flex-direction: row; flex-wrap: wrap; }
     .coverage-grid { grid-template-columns: repeat(3, 1fr); }
     .form-grid { grid-template-columns: 1fr; }
+    .strength-table { font-size: 11px; }
+    .cell-btn { min-height: 44px; font-size: 14px; }
+    .avail-grid { grid-template-columns: repeat(7, minmax(30px,1fr)); }
   }
 </style>
 </head>
@@ -205,6 +261,7 @@
       <button class="tab active" onclick="switchTab('queue')" id="tab-queue">Queue</button>
       <button class="tab" onclick="switchTab('blackout')">Blackout Dates</button>
       <button class="tab" onclick="switchTab('coverage')">Coverage View</button>
+      <button class="tab" onclick="switchTab('strength')">Shift Strength</button>
       <button class="tab" onclick="switchTab('team')">Team</button>
     </div>
 
@@ -260,11 +317,39 @@
       <div class="coverage-grid" id="coverage-grid"></div>
     </div>
 
+    <!-- SHIFT STRENGTH -->
+    <div class="panel" id="panel-strength">
+      <div class="threshold-bar" id="threshold-bar"></div>
+
+      <div class="cov-controls">
+        <div class="cov-nav">
+          <button class="cov-nav-btn" onclick="shiftStrengthWeek(-1)">&#8592;</button>
+          <div class="cov-week-label" id="strength-week-label">—</div>
+          <button class="cov-nav-btn" onclick="shiftStrengthWeek(1)">&#8594;</button>
+        </div>
+        <div class="cov-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent-light);border:1px solid var(--accent)"></div>Above minimum</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--pending-light);border:1px solid var(--pending)"></div>At minimum</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--warn-light);border:1px solid var(--warn)"></div>Below minimum</div>
+        </div>
+      </div>
+
+      <table class="strength-table" id="strength-table"></table>
+
+      <div id="drilldown" style="display:none"></div>
+
+      <div class="form-card" style="margin-top:22px">
+        <h2>Pending Requests — Coverage Impact</h2>
+        <p class="form-desc">Shows what the strength grid becomes for each affected shift if approved, before you decide. Approving or denying here does the same thing as the Queue tab, including the email alert.</p>
+        <div id="req-preview-list"><div class="loading">Loading...</div></div>
+      </div>
+    </div>
+
     <!-- TEAM -->
     <div class="panel" id="panel-team">
       <div class="form-card">
         <h2>Team Roster</h2>
-        <p class="form-desc">Adding or removing staff here updates the filter dropdown and the staff request form automatically.</p>
+        <p class="form-desc">Adding or removing staff here updates the filter dropdown and the staff request form automatically. Position and availability set here also drive the Shift Strength tab — update it anytime as things change.</p>
         <div class="roster-list" id="roster-list"><div class="loading">Loading...</div></div>
         <div class="add-member-row">
           <input type="text" id="new-member-name" placeholder="Full first name (e.g. Marcus)" onkeydown="if(event.key==='Enter') addMember()">
@@ -299,11 +384,31 @@
 
   const DEFAULT_ROSTER = ['Gary','Remy','Jasmine','Lashonda','Mason','Tyler','Rodney','Julius'];
 
+  // ── SHIFT STRENGTH CONSTANTS ─────────────────────────────────────────────
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const POSITIONS = [
+    { id: 'frontdesk', label: 'Front Desk' },
+    { id: 'bell', label: 'Bell/Valet' },
+    { id: 'nightaudit', label: 'Night Audit' }
+  ];
+  const SLOTS = [
+    { id: 'fd-am', label: 'Front Desk AM', position: 'frontdesk' },
+    { id: 'fd-pm', label: 'Front Desk PM', position: 'frontdesk' },
+    { id: 'bell-am', label: 'Bell/Valet AM', position: 'bell' },
+    { id: 'bell-pm', label: 'Bell/Valet PM', position: 'bell' },
+    { id: 'na-ovn', label: 'Night Audit OVN', position: 'nightaudit' }
+  ];
+  const DEFAULT_THRESHOLDS = { 'fd-am': 2, 'fd-pm': 2, 'bell-am': 1, 'bell-pm': 1, 'na-ovn': 1 };
+
   let requests = [];
   let blackouts = [];
   let roster = [];
+  let staffing = {};          // { [name]: { positions:[], availability:{Sun:[slotId,...],...} } }
+  let thresholds = { ...DEFAULT_THRESHOLDS };
   let denyTargetId = null;
   let currentWeekMonday = getMonday(new Date());
+  let strengthWeekMonday = getMonday(new Date());
+  let selectedDrilldownIdx = null;
 
   // ── PIN ───────────────────────────────────────────────────────────────────
   function checkPin() {
@@ -321,19 +426,25 @@
   // ── LOAD ──────────────────────────────────────────────────────────────────
   async function loadAll() {
     try {
-      const [rRes, bRes, teamRes] = await Promise.all([
+      const [rRes, bRes, teamRes, staffRes, threshRes] = await Promise.all([
         fetch(`${WORKER_URL}/timeoff/requests`),
         fetch(`${WORKER_URL}/timeoff/blackouts`),
-        fetch(`${WORKER_URL}/timeoff/team`)
+        fetch(`${WORKER_URL}/timeoff/team`),
+        fetch(`${WORKER_URL}/timeoff/staffing`),
+        fetch(`${WORKER_URL}/timeoff/thresholds`)
       ]);
       const rData = await rRes.json();
       const bData = await bRes.json();
       const teamData = await teamRes.json();
+      const staffData = await staffRes.json();
+      const threshData = await threshRes.json();
 
       requests = rData.requests || [];
       blackouts = bData.blackouts || [];
       // If no roster in KV yet, seed with defaults
       roster = (teamData.roster && teamData.roster.length) ? teamData.roster : [...DEFAULT_ROSTER];
+      staffing = staffData.staffing || {};
+      thresholds = (threshData.thresholds && Object.keys(threshData.thresholds).length) ? threshData.thresholds : { ...DEFAULT_THRESHOLDS };
 
       updateStats();
       renderQueue();
@@ -341,6 +452,11 @@
       renderCoverage();
       renderRoster();
       rebuildNameFilter();
+      renderThresholdBar();
+      renderStrengthTable();
+      renderRequestPreviews();
+      selectedDrilldownIdx = null;
+      document.getElementById('drilldown').style.display = 'none';
       toast('Refreshed');
     } catch(e) { toast('Could not connect to server'); }
   }
@@ -381,11 +497,12 @@
   // ── TABS ──────────────────────────────────────────────────────────────────
   function switchTab(name) {
     document.querySelectorAll('.tab').forEach((t, i) => {
-      t.classList.toggle('active', ['queue','blackout','coverage','team'][i] === name);
+      t.classList.toggle('active', ['queue','blackout','coverage','strength','team'][i] === name);
     });
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + name).classList.add('active');
     if (name === 'coverage') renderCoverage();
+    if (name === 'strength') { renderStrengthTable(); renderRequestPreviews(); }
   }
 
   // ── QUEUE ─────────────────────────────────────────────────────────────────
@@ -482,7 +599,7 @@
       });
       const req = requests.find(r => r.id === id);
       if (req) { req.status = status; req.denialReason = denialReason; }
-      updateStats(); renderQueue(); renderCoverage();
+      updateStats(); renderQueue(); renderCoverage(); renderStrengthTable(); renderRequestPreviews();
       toast(`Request ${status.toLowerCase()}`);
     } catch(e) { toast('Error saving — check connection'); }
   }
@@ -559,6 +676,33 @@
     });
   }
 
+  async function saveStaffing() {
+    try {
+      await fetch(`${WORKER_URL}/timeoff/staffing-save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ staffing })
+      });
+    } catch (e) { toast('Error saving staffing'); }
+  }
+
+  async function saveThresholds() {
+    try {
+      await fetch(`${WORKER_URL}/timeoff/thresholds-save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ thresholds })
+      });
+    } catch (e) { toast('Error saving thresholds'); }
+  }
+
+  function ensureStaffing(name) {
+    if (!staffing[name]) staffing[name] = { positions: [], availability: {} };
+    if (!staffing[name].positions) staffing[name].positions = [];
+    if (!staffing[name].availability) staffing[name].availability = {};
+    return staffing[name];
+  }
+
   async function addMember() {
     const input = document.getElementById('new-member-name');
     const name = input.value.trim();
@@ -572,6 +716,7 @@
     await saveRoster();
     renderRoster();
     rebuildNameFilter();
+    renderStrengthTable();
     toast(`${name} added to roster`);
   }
 
@@ -579,10 +724,48 @@
     const hasRequests = requests.some(r => r.name === name);
     if (hasRequests && !confirm(`${name} has existing requests. Remove them from the roster anyway?`)) return;
     roster = roster.filter(n => n !== name);
+    delete staffing[name];
     await saveRoster();
+    await saveStaffing();
     renderRoster();
     rebuildNameFilter();
+    renderStrengthTable();
     toast(`${name} removed from roster`);
+  }
+
+  function togglePosition(name, posId) {
+    const s = ensureStaffing(name);
+    if (s.positions.includes(posId)) {
+      s.positions = s.positions.filter(x => x !== posId);
+      const slotIdsForPos = SLOTS.filter(sl => sl.position === posId).map(sl => sl.id);
+      Object.keys(s.availability).forEach(day => {
+        s.availability[day] = (s.availability[day] || []).filter(sid => !slotIdsForPos.includes(sid));
+      });
+    } else {
+      s.positions.push(posId);
+    }
+    saveStaffing();
+    renderRoster();
+    renderStrengthTable();
+  }
+
+  function toggleAvailability(name, day, slotId) {
+    const s = ensureStaffing(name);
+    const slot = SLOTS.find(sl => sl.id === slotId);
+    if (!s.positions.includes(slot.position)) return;
+    if (!s.availability[day]) s.availability[day] = [];
+    if (s.availability[day].includes(slotId)) {
+      s.availability[day] = s.availability[day].filter(x => x !== slotId);
+    } else {
+      s.availability[day].push(slotId);
+    }
+    saveStaffing();
+    renderRoster();
+    renderStrengthTable();
+  }
+
+  function slotShortLabel(slotId) {
+    return { 'fd-am':'FD AM','fd-pm':'FD PM','bell-am':'Bell AM','bell-pm':'Bell PM','na-ovn':'NA OVN' }[slotId] || slotId;
   }
 
   function renderRoster() {
@@ -593,22 +776,44 @@
     }
     el.innerHTML = roster.sort().map(name => {
       const reqCount = requests.filter(r => r.name === name).length;
+      const s = ensureStaffing(name);
+
+      const posTags = POSITIONS.map(pos => `
+        <button class="pos-toggle ${s.positions.includes(pos.id) ? 'active' : ''}" onclick="togglePosition('${name}', '${pos.id}')">${pos.label}</button>
+      `).join('');
+
+      const availCols = DAYS.map(day => {
+        const dayAvail = (s.availability && s.availability[day]) || [];
+        const slotBtns = SLOTS.map(slot => {
+          const relevant = s.positions.includes(slot.position);
+          const active = dayAvail.includes(slot.id);
+          return `<button class="avail-slot-btn ${active ? 'active' : ''} ${relevant ? '' : 'disabled'}"
+            onclick="toggleAvailability('${name}', '${day}', '${slot.id}')" title="${slot.label}">${slotShortLabel(slot.id)}</button>`;
+        }).join('');
+        return `<div class="avail-day-col"><div class="avail-day-label">${day}</div>${slotBtns}</div>`;
+      }).join('');
+
       return `
         <div class="roster-item">
-          <div>
-            <div class="roster-name">${name}</div>
-            <div class="roster-count">${reqCount} request${reqCount !== 1 ? 's' : ''} on file</div>
+          <div class="roster-item-head">
+            <div>
+              <div class="roster-name">${name}</div>
+              <div class="roster-count">${reqCount} request${reqCount !== 1 ? 's' : ''} on file</div>
+            </div>
+            <button class="btn btn-outline" onclick="removeMember('${name}')">Remove</button>
           </div>
-          <button class="btn btn-outline" onclick="removeMember('${name}')">Remove</button>
+          <div class="position-tags">${posTags}</div>
+          <div class="avail-grid">${availCols}</div>
         </div>`;
     }).join('');
   }
 
-  // ── COVERAGE ──────────────────────────────────────────────────────────────
+  // ── COVERAGE (existing tab, unchanged) ───────────────────────────────────
   function getMonday(date) {
     const d = new Date(date);
     const day = d.getDay();
     d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+    d.setHours(0,0,0,0);
     return d;
   }
 
@@ -650,6 +855,196 @@
         </div>`;
     }
     document.getElementById('coverage-grid').innerHTML = html;
+  }
+
+  // ── SHIFT STRENGTH ────────────────────────────────────────────────────────
+  function shiftStrengthWeek(dir) {
+    strengthWeekMonday = new Date(strengthWeekMonday);
+    strengthWeekMonday.setDate(strengthWeekMonday.getDate() + dir * 7);
+    selectedDrilldownIdx = null;
+    document.getElementById('drilldown').style.display = 'none';
+    renderStrengthTable();
+  }
+
+  function isoDate(d) {
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function dayNameFor(d) {
+    return DAYS[d.getDay()];
+  }
+
+  function hasApprovedTimeOff(name, ds) {
+    return requests.some(r => r.name === name && r.status === 'Approved' && ds >= r.start && ds <= r.end);
+  }
+
+  function availableFor(slotId, dateObj, excludeNames) {
+    excludeNames = excludeNames || [];
+    const dow = dayNameFor(dateObj);
+    const ds = isoDate(dateObj);
+    const slot = SLOTS.find(s => s.id === slotId);
+    return roster.filter(name => {
+      const s = staffing[name];
+      if (!s || !s.positions || !s.positions.includes(slot.position)) return false;
+      const avail = (s.availability && s.availability[dow]) || [];
+      if (!avail.includes(slotId)) return false;
+      if (hasApprovedTimeOff(name, ds)) return false;
+      if (excludeNames.includes(name)) return false;
+      return true;
+    });
+  }
+
+  function strengthColor(count, min) {
+    if (count < min) return 'red';
+    if (count === min) return 'yellow';
+    return 'green';
+  }
+
+  function renderThresholdBar() {
+    const el = document.getElementById('threshold-bar');
+    el.innerHTML = '<div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);align-self:center">Minimums:</div>' +
+      SLOTS.map(s => `
+        <div class="threshold-field">
+          <label>${s.label}</label>
+          <input type="number" min="0" value="${thresholds[s.id] ?? 0}" onchange="updateThreshold('${s.id}', this.value)">
+        </div>`).join('');
+  }
+
+  function updateThreshold(slotId, val) {
+    thresholds[slotId] = Math.max(0, parseInt(val) || 0);
+    saveThresholds();
+    renderStrengthTable();
+    if (selectedDrilldownIdx !== null) renderDrilldown(selectedDrilldownIdx);
+  }
+
+  function renderStrengthTable() {
+    const monday = strengthWeekMonday;
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      weekDates.push(d);
+    }
+    const endSun = weekDates[6];
+    document.getElementById('strength-week-label').textContent = `${fmtDateShort(monday)} – ${fmtDateShort(endSun)}`;
+
+    let thead = '<tr><th class="shift-col">Shift</th>' +
+      weekDates.map((d,i) => `<th onclick="openDrilldown(${i})" style="cursor:pointer">${DAYS[d.getDay()]}<br>${d.getDate()}</th>`).join('') +
+      '</tr>';
+
+    let rows = SLOTS.map(slot => {
+      const min = thresholds[slot.id] ?? 0;
+      const cells = weekDates.map((d, i) => {
+        const avail = availableFor(slot.id, d);
+        const color = strengthColor(avail.length, min);
+        return `<td><button class="cell-btn cell-${color}" onclick="openDrilldown(${i})">
+          <span>${avail.length}</span><span class="thresh">min ${min}</span>
+        </button></td>`;
+      }).join('');
+      return `<tr><td class="shift-label">${slot.label}</td>${cells}</tr>`;
+    }).join('');
+
+    document.getElementById('strength-table').innerHTML = thead + rows;
+
+    if (selectedDrilldownIdx !== null) renderDrilldown(selectedDrilldownIdx);
+  }
+
+  function openDrilldown(dayIdx) {
+    selectedDrilldownIdx = dayIdx;
+    renderDrilldown(dayIdx);
+  }
+
+  function renderDrilldown(dayIdx) {
+    const monday = strengthWeekMonday;
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + dayIdx);
+    const ds = isoDate(d);
+    const dow = dayNameFor(d);
+
+    const el = document.getElementById('drilldown');
+    el.style.display = 'block';
+
+    const shiftsHtml = SLOTS.map(slot => {
+      const min = thresholds[slot.id] ?? 0;
+      const avail = availableFor(slot.id, d);
+      const color = strengthColor(avail.length, min);
+      const peopleHtml = avail.length
+        ? `<div class="dd-people">${avail.map(n => `<span class="dd-person">${n}</span>`).join('')}</div>`
+        : '<div class="dd-empty">No one available for this shift on this day.</div>';
+      return `
+        <div class="dd-shift">
+          <div class="dd-shift-head">
+            <div class="dd-shift-name">${slot.label}</div>
+            <div class="dd-count ${color}">${avail.length} available &middot; min ${min}</div>
+          </div>
+          ${peopleHtml}
+        </div>`;
+    }).join('');
+
+    const dayRequests = requests.filter(r => r.status === 'Pending' && ds >= r.start && ds <= r.end);
+    const pendingHtml = dayRequests.length
+      ? `<div class="dd-shift"><div class="dd-shift-name" style="margin-bottom:8px">Pending requests touching this day</div>` +
+        dayRequests.map(r => `<div class="dd-person" style="margin-right:6px">${r.name}</div>`).join('') + `</div>`
+      : '';
+
+    el.innerHTML = `<h3>${dow}, ${fmtDateShort(d)}</h3>${shiftsHtml}${pendingHtml}`;
+  }
+
+  function renderRequestPreviews() {
+    const el = document.getElementById('req-preview-list');
+    if (!el) return;
+    const pending = requests.filter(r => r.status === 'Pending').sort((a,b) => a.start.localeCompare(b.start));
+
+    if (!pending.length) {
+      el.innerHTML = '<div class="empty"><div class="icon">✅</div><p>No pending requests.</p></div>';
+      return;
+    }
+
+    el.innerHTML = pending.map(r => {
+      const dr = r.start === r.end ? fmtDate(r.start) : `${fmtDate(r.start)} – ${fmtDate(r.end)}`;
+      const impact = buildImpactForRequest(r);
+      return `
+        <div class="req-preview-card">
+          <div class="req-preview-head">
+            <div>
+              <div class="req-preview-name">${r.name}</div>
+              <div class="req-preview-dates">${dr} &middot; ${r.type || 'Time off'}</div>
+            </div>
+          </div>
+          <div class="req-preview-impact">${impact}</div>
+          <div class="req-preview-actions">
+            <button class="btn btn-approve" onclick="approveReq(${r.id})">Approve</button>
+            <button class="btn btn-deny" onclick="denyReq(${r.id})">Deny</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function buildImpactForRequest(r) {
+    const s = staffing[r.name];
+    if (!s || !s.positions || !s.positions.length) {
+      return '<span class="impact-chip" style="background:var(--surface-2);color:var(--text-muted)">No position/availability set for this person yet</span>';
+    }
+    const start = new Date(r.start + 'T00:00:00');
+    const end = new Date(r.end + 'T00:00:00');
+    const relevantSlots = SLOTS.filter(sl => s.positions.includes(sl.position));
+    const chips = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+      const dow = dayNameFor(d);
+      const personAvail = (s.availability && s.availability[dow]) || [];
+      relevantSlots.forEach(slot => {
+        if (!personAvail.includes(slot.id)) return;
+        const min = thresholds[slot.id] ?? 0;
+        const before = availableFor(slot.id, d).length;
+        const after = availableFor(slot.id, d, [r.name]).length;
+        const colorAfter = strengthColor(after, min);
+        const bg = colorAfter === 'green' ? 'var(--accent-light)' : colorAfter === 'yellow' ? 'var(--pending-light)' : 'var(--warn-light)';
+        const fg = colorAfter === 'green' ? 'var(--accent)' : colorAfter === 'yellow' ? 'var(--pending)' : 'var(--warn)';
+        chips.push(`<span class="impact-chip" style="background:${bg};color:${fg}">${slot.label} ${fmtDateShort(d)}: ${before} → ${after}</span>`);
+      });
+    }
+    return chips.length ? chips.join('') : '<span class="impact-chip" style="background:var(--surface-2);color:var(--text-muted)">Not scheduled for any covered shift on these dates</span>';
   }
 
   // ── EMAIL ALERT ───────────────────────────────────────────────────────────
