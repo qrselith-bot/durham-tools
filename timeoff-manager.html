@@ -136,6 +136,37 @@
 
   /* COVERAGE */
   .cov-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+
+  /* VIEW TOGGLES */
+  .view-toggle { display: flex; gap: 6px; }
+  .view-toggle-btn { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; }
+  .view-toggle-btn.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+  /* QUEUE TABLE VIEW */
+  .queue-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .queue-table th, .queue-table td { border-bottom: 1px solid var(--border); padding: 10px 12px; text-align: left; font-size: 12px; vertical-align: top; }
+  .queue-table th { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); background: var(--surface-2); }
+  .queue-table tr:last-child td { border-bottom: none; }
+  .qt-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
+  .qt-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .qt-meta { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+
+  /* STRENGTH NAMES MODE */
+  .cell-btn.names-mode { min-height: 56px; padding: 6px 4px; gap: 2px; }
+  .cell-name-chip { font-size: 9px; padding: 1px 5px; border-radius: 2px; background: rgba(0,0,0,0.08); line-height: 1.5; }
+
+  /* STRENGTH AGENDA VIEW */
+  #strength-agenda { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px 20px; }
+  .agenda-day { border-top: 1px solid var(--border); padding: 16px 0; }
+  .agenda-day:first-child { border-top: none; }
+  .agenda-day h4 { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+
+  /* COVERAGE SUMMARY MODE */
+  .cov-summary-counts { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+  .cov-summary-row { font-family: var(--mono); font-size: 11px; display: flex; justify-content: space-between; }
+  .cov-summary-row.approved { color: var(--accent); }
+  .cov-summary-row.pending { color: var(--pending); }
+  .cov-summary-row.denied { color: var(--text-muted); }
   .cov-nav { display: flex; gap: 6px; align-items: center; }
   .cov-nav-btn { font-family: var(--mono); font-size: 13px; padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
   .cov-nav-btn:hover { background: var(--surface-2); }
@@ -281,7 +312,14 @@
         <select id="f-sort" onchange="renderQueue()">
           <option value="logged">Sort: Date Received</option>
           <option value="leave">Sort: Date of Leave</option>
+          <option value="name">Sort: Name A–Z</option>
+          <option value="urgency">Sort: Soonest First</option>
+          <option value="length">Sort: Longest Request First</option>
         </select>
+        <div class="view-toggle" style="margin-left:auto">
+          <button class="view-toggle-btn active" id="qv-cards" onclick="setQueueView('cards')">Cards</button>
+          <button class="view-toggle-btn" id="qv-table" onclick="setQueueView('table')">Table</button>
+        </div>
       </div>
       <div class="queue" id="queue-list"><div class="loading">Loading requests...</div></div>
     </div>
@@ -313,6 +351,10 @@
           <div class="legend-item"><div class="legend-dot pending"></div>Pending</div>
           <div class="legend-item"><div class="legend-dot denied"></div>Denied</div>
         </div>
+        <div class="view-toggle">
+          <button class="view-toggle-btn active" id="cv-detailed" onclick="setCoverageView('detailed')">Detailed</button>
+          <button class="view-toggle-btn" id="cv-summary" onclick="setCoverageView('summary')">Summary</button>
+        </div>
       </div>
       <div class="coverage-grid" id="coverage-grid"></div>
     </div>
@@ -332,15 +374,21 @@
           <div class="legend-item"><div class="legend-dot" style="background:var(--pending-light);border:1px solid var(--pending)"></div>At minimum</div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--warn-light);border:1px solid var(--warn)"></div>Below minimum</div>
         </div>
+        <div class="view-toggle">
+          <button class="view-toggle-btn active" id="sv-counts" onclick="setStrengthView('counts')">Counts</button>
+          <button class="view-toggle-btn" id="sv-names" onclick="setStrengthView('names')">Names</button>
+          <button class="view-toggle-btn" id="sv-agenda" onclick="setStrengthView('agenda')">Agenda</button>
+        </div>
       </div>
 
       <table class="strength-table" id="strength-table"></table>
+      <div id="strength-agenda" style="display:none"></div>
 
       <div id="drilldown" style="display:none"></div>
 
       <div class="form-card" style="margin-top:22px">
         <h2>Pending Requests — Coverage Impact</h2>
-        <p class="form-desc">Strength grid. approving or denying here does the same thing as the 'Queue' tab, including the email alert.</p>
+        <p class="form-desc">Shows what the strength grid becomes for each affected shift if approved, before you decide. Approving or denying here does the same thing as the Queue tab, including the email alert.</p>
         <div id="req-preview-list"><div class="loading">Loading...</div></div>
       </div>
     </div>
@@ -409,6 +457,9 @@
   let currentWeekMonday = getMonday(new Date());
   let strengthWeekMonday = getMonday(new Date());
   let selectedDrilldownIdx = null;
+  let queueViewMode = 'cards';       // 'cards' | 'table'
+  let coverageViewMode = 'detailed'; // 'detailed' | 'summary'
+  let strengthViewMode = 'counts';   // 'counts' | 'names' | 'agenda'
 
   // ── PIN ───────────────────────────────────────────────────────────────────
   function checkPin() {
@@ -506,26 +557,59 @@
   }
 
   // ── QUEUE ─────────────────────────────────────────────────────────────────
-  function renderQueue() {
+  function requestLengthDays(r) {
+    return Math.round((new Date(r.end) - new Date(r.start)) / 86400000) + 1;
+  }
+
+  function urgencyKey(r) {
+    const todayIso = isoDate(new Date());
+    const diffDays = (new Date(r.start) - new Date(todayIso)) / 86400000;
+    // Future/today dates sort soonest-first; anything already started gets pushed
+    // to the end, still ordered among itself, rather than mixing into the front.
+    return diffDays >= 0 ? diffDays : diffDays + 100000;
+  }
+
+  function setQueueView(mode) {
+    queueViewMode = mode;
+    document.getElementById('qv-cards').classList.toggle('active', mode === 'cards');
+    document.getElementById('qv-table').classList.toggle('active', mode === 'table');
+    renderQueue();
+  }
+
+  function getFilteredSortedRequests() {
     const sf = document.getElementById('f-status').value;
     const nf = document.getElementById('f-name').value;
     const mf = document.getElementById('f-month').value;
     const sort = document.getElementById('f-sort').value;
-    const el = document.getElementById('queue-list');
 
-    let filtered = requests.filter(r => {
+    return requests.filter(r => {
       if (sf !== 'all' && r.status !== sf) return false;
       if (nf !== 'all' && r.name !== nf) return false;
       if (mf && !r.start.startsWith(mf) && !r.end.startsWith(mf)) return false;
       return true;
-    }).sort((a, b) => sort === 'leave' ? a.start.localeCompare(b.start) : b.loggedAt.localeCompare(a.loggedAt));
+    }).sort((a, b) => {
+      if (sort === 'leave') return a.start.localeCompare(b.start);
+      if (sort === 'name') return a.name.localeCompare(b.name);
+      if (sort === 'urgency') return urgencyKey(a) - urgencyKey(b);
+      if (sort === 'length') return requestLengthDays(b) - requestLengthDays(a);
+      return b.loggedAt.localeCompare(a.loggedAt); // 'logged' default
+    });
+  }
+
+  function renderQueue() {
+    const el = document.getElementById('queue-list');
+    const filtered = getFilteredSortedRequests();
 
     if (!filtered.length) {
       el.innerHTML = '<div class="empty"><div class="icon">📋</div><p>No requests match this filter.</p></div>';
       return;
     }
 
-    el.innerHTML = filtered.map(r => {
+    el.innerHTML = queueViewMode === 'table' ? renderQueueTableHtml(filtered) : renderQueueCardsHtml(filtered);
+  }
+
+  function renderQueueCardsHtml(filtered) {
+    return `<div class="queue">` + filtered.map(r => {
       const sc = r.status.toLowerCase();
       const dr = r.start === r.end ? fmtDate(r.start) : `${fmtDate(r.start)} – ${fmtDate(r.end)}`;
       const conflict = checkConflictLocal(r.name, r.start, r.end, r.id);
@@ -545,6 +629,7 @@
             <div class="req-name">${r.name}</div>
             <div class="req-meta">
               <span>📅 <strong>${dr}</strong></span>
+              <span>${requestLengthDays(r)} day${requestLengthDays(r) !== 1 ? 's' : ''}</span>
               <span>🏷 ${r.type}</span>
               <span>via ${r.source}</span>
               <span>Received ${fmtDate(r.received)}</span>
@@ -555,7 +640,35 @@
           </div>
           <div class="req-actions">${actions}</div>
         </div>`;
+    }).join('') + `</div>`;
+  }
+
+  function renderQueueTableHtml(filtered) {
+    const rows = filtered.map(r => {
+      const sc = r.status.toLowerCase();
+      const dr = r.start === r.end ? fmtDate(r.start) : `${fmtDate(r.start)} – ${fmtDate(r.end)}`;
+      const conflict = checkConflictLocal(r.name, r.start, r.end, r.id);
+      const actions = r.status === 'Pending'
+        ? `<button class="btn btn-approve" onclick="approveReq(${r.id})">Approve</button>
+           <button class="btn btn-deny" onclick="denyReq(${r.id})">Deny</button>
+           <button class="btn btn-outline" onclick="deleteReq(${r.id})">Remove</button>`
+        : `<span class="status-chip chip-${sc}">${r.status}</span>
+           <button class="btn btn-outline" onclick="deleteReq(${r.id})">Remove</button>`;
+      return `
+        <tr>
+          <td><span class="qt-dot dot-${sc}"></span>${r.name}</td>
+          <td>${dr}<div class="qt-meta">${requestLengthDays(r)} day${requestLengthDays(r) !== 1 ? 's' : ''}</div></td>
+          <td>${r.type}</td>
+          <td class="qt-meta">${r.source}<br>Received ${fmtDate(r.received)}</td>
+          <td>${conflict ? `<span class="conflict-tag">⚠ ${conflict}</span>` : ''}${r.status === 'Denied' && r.denialReason ? `<div class="qt-meta">Denial: ${r.denialReason}</div>` : ''}</td>
+          <td class="qt-actions">${actions}</td>
+        </tr>`;
     }).join('');
+    return `
+      <table class="queue-table">
+        <thead><tr><th>Associate</th><th>Dates</th><th>Type</th><th>Source</th><th>Notes</th><th>Actions</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
   }
 
   function checkConflictLocal(name, start, end, skipId) {
@@ -823,6 +936,13 @@
     renderCoverage();
   }
 
+  function setCoverageView(mode) {
+    coverageViewMode = mode;
+    document.getElementById('cv-detailed').classList.toggle('active', mode === 'detailed');
+    document.getElementById('cv-summary').classList.toggle('active', mode === 'summary');
+    renderCoverage();
+  }
+
   function renderCoverage() {
     const monday = currentWeekMonday;
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -842,16 +962,28 @@
       const isBlackout = blackouts.some(b => ds >= b.start && ds <= b.end);
       const hasConflict = dayReqs.filter(r => r.status === 'Approved').length >= 2;
 
+      let body;
+      if (coverageViewMode === 'summary') {
+        const counts = { Approved: 0, Pending: 0, Denied: 0 };
+        dayReqs.forEach(r => { counts[r.status] = (counts[r.status] || 0) + 1; });
+        body = `<div class="cov-summary-counts">
+          <div class="cov-summary-row approved"><span>Approved</span><span>${counts.Approved}</span></div>
+          <div class="cov-summary-row pending"><span>Pending</span><span>${counts.Pending}</span></div>
+          <div class="cov-summary-row denied"><span>Denied</span><span>${counts.Denied}</span></div>
+        </div>`;
+      } else {
+        body = dayReqs.map(r => {
+          const sc = r.status.toLowerCase();
+          const label = r.status === 'Pending' ? `${r.name} ?` : r.name;
+          return `<div class="cov-name ${sc}">${label}</div>`;
+        }).join('') + (!dayReqs.length && !isBlackout ? '<div style="font-size:11px;color:var(--border)">—</div>' : '');
+      }
+
       html += `
         <div class="cov-day ${isBlackout ? 'is-blackout' : hasConflict ? 'has-conflict' : ''}">
           <div class="cov-label">${days[i]} ${d.getDate()}</div>
           ${isBlackout ? '<div class="cov-blackout-tag">Blackout</div>' : ''}
-          ${dayReqs.map(r => {
-            const sc = r.status.toLowerCase();
-            const label = r.status === 'Pending' ? `${r.name} ?` : r.name;
-            return `<div class="cov-name ${sc}">${label}</div>`;
-          }).join('')}
-          ${!dayReqs.length && !isBlackout ? '<div style="font-size:11px;color:var(--border)">—</div>' : ''}
+          ${body}
         </div>`;
     }
     document.getElementById('coverage-grid').innerHTML = html;
@@ -918,6 +1050,14 @@
     if (selectedDrilldownIdx !== null) renderDrilldown(selectedDrilldownIdx);
   }
 
+  function setStrengthView(mode) {
+    strengthViewMode = mode;
+    document.getElementById('sv-counts').classList.toggle('active', mode === 'counts');
+    document.getElementById('sv-names').classList.toggle('active', mode === 'names');
+    document.getElementById('sv-agenda').classList.toggle('active', mode === 'agenda');
+    renderStrengthTable();
+  }
+
   function renderStrengthTable() {
     const monday = strengthWeekMonday;
     const weekDates = [];
@@ -929,6 +1069,21 @@
     const endSun = weekDates[6];
     document.getElementById('strength-week-label').textContent = `${fmtDateShort(monday)} – ${fmtDateShort(endSun)}`;
 
+    const tableEl = document.getElementById('strength-table');
+    const agendaEl = document.getElementById('strength-agenda');
+    const drilldownEl = document.getElementById('drilldown');
+
+    if (strengthViewMode === 'agenda') {
+      tableEl.style.display = 'none';
+      drilldownEl.style.display = 'none';
+      agendaEl.style.display = 'block';
+      agendaEl.innerHTML = weekDates.map((d, i) => renderAgendaDayHtml(d)).join('');
+      return;
+    }
+
+    tableEl.style.display = '';
+    agendaEl.style.display = 'none';
+
     let thead = '<tr><th class="shift-col">Shift</th>' +
       weekDates.map((d,i) => `<th onclick="openDrilldown(${i})" style="cursor:pointer">${DAYS[d.getDay()]}<br>${d.getDate()}</th>`).join('') +
       '</tr>';
@@ -938,33 +1093,24 @@
       const cells = weekDates.map((d, i) => {
         const avail = availableFor(slot.id, d);
         const color = strengthColor(avail.length, min);
-        return `<td><button class="cell-btn cell-${color}" onclick="openDrilldown(${i})">
-          <span>${avail.length}</span><span class="thresh">min ${min}</span>
-        </button></td>`;
+        const inner = strengthViewMode === 'names'
+          ? (avail.length
+              ? avail.map(n => `<span class="cell-name-chip">${n}</span>`).join('')
+              : `<span class="cell-name-chip" style="opacity:.5">none</span>`) + `<span class="thresh">min ${min}</span>`
+          : `<span>${avail.length}</span><span class="thresh">min ${min}</span>`;
+        const modeClass = strengthViewMode === 'names' ? 'cell-btn names-mode' : 'cell-btn';
+        return `<td><button class="${modeClass} cell-${color}" onclick="openDrilldown(${i})">${inner}</button></td>`;
       }).join('');
       return `<tr><td class="shift-label">${slot.label}</td>${cells}</tr>`;
     }).join('');
 
-    document.getElementById('strength-table').innerHTML = thead + rows;
+    tableEl.innerHTML = thead + rows;
 
     if (selectedDrilldownIdx !== null) renderDrilldown(selectedDrilldownIdx);
   }
 
-  function openDrilldown(dayIdx) {
-    selectedDrilldownIdx = dayIdx;
-    renderDrilldown(dayIdx);
-  }
-
-  function renderDrilldown(dayIdx) {
-    const monday = strengthWeekMonday;
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + dayIdx);
+  function renderDayInnerHtml(d) {
     const ds = isoDate(d);
-    const dow = dayNameFor(d);
-
-    const el = document.getElementById('drilldown');
-    el.style.display = 'block';
-
     const shiftsHtml = SLOTS.map(slot => {
       const min = thresholds[slot.id] ?? 0;
       const avail = availableFor(slot.id, d);
@@ -988,7 +1134,28 @@
         dayRequests.map(r => `<div class="dd-person" style="margin-right:6px">${r.name}</div>`).join('') + `</div>`
       : '';
 
-    el.innerHTML = `<h3>${dow}, ${fmtDateShort(d)}</h3>${shiftsHtml}${pendingHtml}`;
+    return shiftsHtml + pendingHtml;
+  }
+
+  function renderAgendaDayHtml(d) {
+    const dow = dayNameFor(d);
+    return `<div class="agenda-day"><h4>${dow}, ${fmtDateShort(d)}</h4>${renderDayInnerHtml(d)}</div>`;
+  }
+
+  function openDrilldown(dayIdx) {
+    selectedDrilldownIdx = dayIdx;
+    renderDrilldown(dayIdx);
+  }
+
+  function renderDrilldown(dayIdx) {
+    if (strengthViewMode === 'agenda') return; // agenda view already shows every day
+    const monday = strengthWeekMonday;
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + dayIdx);
+    const dow = dayNameFor(d);
+    const el = document.getElementById('drilldown');
+    el.style.display = 'block';
+    el.innerHTML = `<h3>${dow}, ${fmtDateShort(d)}</h3>${renderDayInnerHtml(d)}`;
   }
 
   function renderRequestPreviews() {
