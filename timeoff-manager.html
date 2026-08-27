@@ -219,7 +219,8 @@
   .dd-count.yellow { background: var(--pending-light); color: var(--pending); }
   .dd-count.red { background: var(--warn-light); color: var(--warn); }
   .dd-people { display: flex; flex-wrap: wrap; gap: 6px; }
-  .dd-person { font-size: 11px; padding: 3px 9px; border-radius: 3px; background: var(--surface-2); color: var(--text); }
+  .dd-person { font-size: 11px; padding: 3px 9px; border-radius: 3px; background: var(--surface-2); color: var(--text); cursor: pointer; transition: opacity 0.15s; }
+  .dd-person:hover { opacity: 0.72; }
   .dd-person.approved { background: var(--accent-light); color: var(--accent); }
   .dd-person.pending { background: var(--pending-light); color: var(--pending); }
   .dd-empty { font-size: 11px; color: var(--text-muted); font-style: italic; }
@@ -423,6 +424,11 @@
       <button class="btn btn-deny" onclick="confirmDeny()">Confirm Denial</button>
     </div>
   </div>
+</div>
+
+<!-- REQUEST DETAIL MODAL -->
+<div class="modal-overlay" id="request-detail-modal">
+  <div class="modal" id="request-detail-content" style="width:440px"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -729,6 +735,62 @@
       });
       await loadAll();
     } catch(e) { toast('Error removing — check connection'); }
+  }
+
+  // ── REQUEST DETAIL MODAL (opened from the Shift Strength agenda/drill-down) ─
+  function openRequestDetail(id) {
+    const r = requests.find(x => x.id === id);
+    if (!r) return;
+    const sc = r.status.toLowerCase();
+    const dr = r.start === r.end ? fmtDate(r.start) : `${fmtDate(r.start)} – ${fmtDate(r.end)}`;
+    const conflict = checkConflictLocal(r.name, r.start, r.end, r.id);
+    const conflictHtml = conflict ? `<div class="conflict-tag" style="margin-top:8px">⚠ ${conflict}</div>` : '';
+    const denialHtml = r.status === 'Denied' && r.denialReason ? `<div class="req-notes" style="margin-top:8px">Denial reason: ${r.denialReason}</div>` : '';
+    const actions = r.status === 'Pending'
+      ? `<button class="btn btn-approve" onclick="approveReqFromModal(${r.id})">Approve</button>
+         <button class="btn btn-deny" onclick="denyReqFromModal(${r.id})">Deny</button>
+         <button class="btn btn-outline" onclick="deleteReqFromModal(${r.id})">Remove</button>`
+      : `<span class="status-chip chip-${sc}">${r.status}</span>
+         <button class="btn btn-outline" onclick="deleteReqFromModal(${r.id})">Remove</button>`;
+
+    document.getElementById('request-detail-content').innerHTML = `
+      <h3>${r.name}</h3>
+      <div class="req-meta" style="margin-top:8px">
+        <span>📅 <strong>${dr}</strong></span>
+        <span>${requestLengthDays(r)} day${requestLengthDays(r) !== 1 ? 's' : ''}</span>
+        <span>🏷 ${r.type}</span>
+      </div>
+      <div class="req-meta" style="margin-top:6px">
+        <span>via ${r.source}</span>
+        <span>Received ${fmtDate(r.received)}</span>
+      </div>
+      ${conflictHtml}
+      ${r.notes ? `<div class="req-notes" style="margin-top:8px">${r.notes}</div>` : ''}
+      ${denialHtml}
+      <div class="modal-actions" style="justify-content:flex-start; flex-wrap:wrap; margin-top:18px">${actions}</div>
+      <div class="modal-actions" style="margin-top:12px">
+        <button class="btn btn-outline" onclick="closeRequestDetail()">Close</button>
+      </div>`;
+    document.getElementById('request-detail-modal').classList.add('open');
+  }
+
+  function closeRequestDetail() {
+    document.getElementById('request-detail-modal').classList.remove('open');
+  }
+
+  async function approveReqFromModal(id) {
+    closeRequestDetail();
+    await approveReq(id);
+  }
+
+  function denyReqFromModal(id) {
+    closeRequestDetail();
+    denyReq(id);
+  }
+
+  async function deleteReqFromModal(id) {
+    closeRequestDetail();
+    await deleteReq(id);
   }
 
   // ── BLACKOUTS ─────────────────────────────────────────────────────────────
@@ -1133,8 +1195,8 @@
 
     const dayRequests = requests.filter(r => r.status !== 'Denied' && ds >= r.start && ds <= r.end);
     const requestsHtml = dayRequests.length
-      ? `<div class="dd-shift"><div class="dd-shift-name" style="margin-bottom:8px">Requests touching this day</div>` +
-        dayRequests.map(r => `<span class="dd-person ${r.status.toLowerCase()}">${r.name} <span style="opacity:.7">(${r.status})</span></span>`).join(' ') + `</div>`
+      ? `<div class="dd-shift"><div class="dd-shift-name" style="margin-bottom:8px">Requests touching this day &middot; click to manage</div>` +
+        dayRequests.map(r => `<span class="dd-person ${r.status.toLowerCase()}" onclick="openRequestDetail(${r.id})" title="Click to view or manage this request">${r.name} <span style="opacity:.7">(${r.status})</span></span>`).join(' ') + `</div>`
       : '';
 
     return shiftsHtml + requestsHtml;
