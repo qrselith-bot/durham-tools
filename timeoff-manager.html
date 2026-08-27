@@ -220,6 +220,8 @@
   .dd-count.red { background: var(--warn-light); color: var(--warn); }
   .dd-people { display: flex; flex-wrap: wrap; gap: 6px; }
   .dd-person { font-size: 11px; padding: 3px 9px; border-radius: 3px; background: var(--surface-2); color: var(--text); }
+  .dd-person.approved { background: var(--accent-light); color: var(--accent); }
+  .dd-person.pending { background: var(--pending-light); color: var(--pending); }
   .dd-empty { font-size: 11px; color: var(--text-muted); font-style: italic; }
 
   .req-preview-card { background: var(--pending-light); border: 1px solid #E8D6A8; border-radius: 6px; padding: 14px 16px; margin-bottom: 10px; }
@@ -388,7 +390,7 @@
 
       <div class="form-card" style="margin-top:22px">
         <h2>Pending Requests — Coverage Impact</h2>
-        <p class="form-desc">Shows what the strength grid becomes for each affected shift if approved, before you decide. Approving or denying here does the same thing as the Queue tab, including the email alert.</p>
+        <p class="form-desc">Shows what the strength grid becomes for each affected shift if approved, before you decide. Only pending requests overlapping the week shown above appear here — page the week to see others. Approving or denying here does the same thing as the Queue tab, including the email alert.</p>
         <div id="req-preview-list"><div class="loading">Loading...</div></div>
       </div>
     </div>
@@ -996,6 +998,7 @@
     selectedDrilldownIdx = null;
     document.getElementById('drilldown').style.display = 'none';
     renderStrengthTable();
+    renderRequestPreviews();
   }
 
   function isoDate(d) {
@@ -1128,13 +1131,13 @@
         </div>`;
     }).join('');
 
-    const dayRequests = requests.filter(r => r.status === 'Pending' && ds >= r.start && ds <= r.end);
-    const pendingHtml = dayRequests.length
-      ? `<div class="dd-shift"><div class="dd-shift-name" style="margin-bottom:8px">Pending requests touching this day</div>` +
-        dayRequests.map(r => `<div class="dd-person" style="margin-right:6px">${r.name}</div>`).join('') + `</div>`
+    const dayRequests = requests.filter(r => r.status !== 'Denied' && ds >= r.start && ds <= r.end);
+    const requestsHtml = dayRequests.length
+      ? `<div class="dd-shift"><div class="dd-shift-name" style="margin-bottom:8px">Requests touching this day</div>` +
+        dayRequests.map(r => `<span class="dd-person ${r.status.toLowerCase()}">${r.name} <span style="opacity:.7">(${r.status})</span></span>`).join(' ') + `</div>`
       : '';
 
-    return shiftsHtml + pendingHtml;
+    return shiftsHtml + requestsHtml;
   }
 
   function renderAgendaDayHtml(d) {
@@ -1161,10 +1164,18 @@
   function renderRequestPreviews() {
     const el = document.getElementById('req-preview-list');
     if (!el) return;
-    const pending = requests.filter(r => r.status === 'Pending').sort((a,b) => a.start.localeCompare(b.start));
+    const monday = strengthWeekMonday;
+    const weekStart = isoDate(monday);
+    const sundayDate = new Date(monday);
+    sundayDate.setDate(monday.getDate() + 6);
+    const weekEnd = isoDate(sundayDate);
+
+    const pending = requests
+      .filter(r => r.status === 'Pending' && r.start <= weekEnd && r.end >= weekStart)
+      .sort((a,b) => a.start.localeCompare(b.start));
 
     if (!pending.length) {
-      el.innerHTML = '<div class="empty"><div class="icon">✅</div><p>No pending requests.</p></div>';
+      el.innerHTML = '<div class="empty"><div class="icon">✅</div><p>No pending requests touching this week.</p></div>';
       return;
     }
 
