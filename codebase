@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Systems, Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE7DA;
+    --card:#F6F2E7;
+    --code:#2A2620;
+    --code-text:#E8E1D0;
+    --ink:#23201B;
+    --ink-soft:#5B564A;
+    --forest:#33473C;
+    --brass:#A9793D;
+    --line:#C7BCA4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px 100px;}
+
+  header.masthead{
+    padding:44px 0 22px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:0;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:2rem;
+    margin:0 0 8px;
+    color:var(--forest);
+  }
+  .lede{color:var(--ink-soft);font-size:0.98rem;max-width:52ch;margin:0;}
+
+  /* LESSON TAB STRIP */
+  .lesson-strip{
+    display:flex;
+    gap:2px;
+    overflow-x:auto;
+    padding:18px 0 0;
+    margin-bottom:36px;
+    border-bottom:1px solid var(--line);
+    -webkit-overflow-scrolling:touch;
+  }
+  .lesson-strip::-webkit-scrollbar{height:3px;}
+  .lesson-strip::-webkit-scrollbar-thumb{background:var(--line);}
+  .ltab{
+    flex-shrink:0;
+    background:none;
+    border:none;
+    border-bottom:2px solid transparent;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    letter-spacing:0.5px;
+    color:var(--ink-soft);
+    padding:8px 14px 12px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .ltab.active{color:var(--forest);border-bottom-color:var(--brass);font-weight:500;}
+  .ltab.locked{color:var(--line);cursor:default;}
+
+  /* LESSON CONTENT */
+  .lesson{display:none;}
+  .lesson.active{display:block;}
+  .lesson-tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    color:var(--brass);
+    letter-spacing:0.5px;
+    display:block;
+    margin-bottom:6px;
+  }
+  .lesson h2{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:1.7rem;
+    margin:0 0 6px;
+  }
+  .lesson-sub{color:var(--ink-soft);font-size:0.96rem;max-width:56ch;margin:0 0 32px;}
+
+  .locked-note{
+    background:var(--card);
+    border:1px dashed var(--line);
+    border-radius:4px;
+    padding:24px;
+    color:var(--ink-soft);
+    font-size:0.95rem;
+    text-align:center;
+  }
+
+  section.block{margin-bottom:44px;}
+  .block-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    color:var(--forest);
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .block-label::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  .lesson p{margin:0 0 14px;font-size:0.98rem;}
+  .lesson h3{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:1.15rem;
+    margin:26px 0 10px;
+  }
+  .lesson h3:first-child{margin-top:0;}
+
+  code.inline{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.86em;
+    background:var(--card);
+    padding:1px 5px;
+    border-radius:3px;
+    border:1px solid var(--line);
+  }
+
+  .app-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:20px 22px;
+    margin-bottom:22px;
+  }
+  .app-card h4{
+    font-size:1rem;
+    font-weight:600;
+    margin:0 0 3px;
+  }
+  .app-source{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.7rem;
+    color:var(--brass);
+    margin-bottom:14px;
+    display:block;
+  }
+  pre.code{
+    background:var(--code);
+    color:var(--code-text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.82rem;
+    line-height:1.65;
+    padding:16px 18px;
+    border-radius:4px;
+    overflow-x:auto;
+    margin:0 0 16px;
+    white-space:pre;
+  }
+  .breakdown{margin:0;}
+  .breakdown dt{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.82rem;
+    color:var(--forest);
+    margin-top:12px;
+    margin-bottom:3px;
+  }
+  .breakdown dt:first-child{margin-top:0;}
+  .breakdown dd{margin:0 0 4px;font-size:0.92rem;color:var(--ink-soft);}
+
+  .why-box{
+    border-left:2px solid var(--brass);
+    padding:2px 0 2px 16px;
+    margin-top:16px;
+    font-size:0.92rem;
+    color:var(--ink-soft);
+  }
+  .why-box strong{color:var(--ink);}
+
+  /* QUIZ */
+  .quiz-intro{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:16px 20px;
+    font-size:0.9rem;
+    color:var(--ink-soft);
+    margin-bottom:22px;
+  }
+  .quiz-intro strong{color:var(--ink);}
+  .qitem{margin-bottom:26px;}
+  .qnum{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.72rem;
+    color:var(--brass);
+    display:block;
+    margin-bottom:5px;
+  }
+  .qtext{font-weight:500;margin:0 0 10px;font-size:0.98rem;}
+  textarea.qanswer{
+    width:100%;
+    min-height:70px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:10px 12px;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:0.9rem;
+    color:var(--ink);
+    resize:vertical;
+  }
+  textarea.qanswer:focus{outline:1px solid var(--brass);}
+  .save-flag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.68rem;
+    color:var(--ink-soft);
+    opacity:0;
+    transition:opacity .3s;
+    display:block;
+    margin-top:5px;
+  }
+  .save-flag.show{opacity:1;}
+
+  @media (max-width:560px){
+    .wrap{padding:0 16px 90px;}
+    h1{font-size:1.65rem;}
+    .lesson h2{font-size:1.4rem;}
+    pre.code{font-size:0.76rem;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <h1>Your Systems, Explained</h1>
+    <p class="lede">A living textbook built from your own code. Each lesson pulls real snippets from the tools you run, breaks them down, and ends with questions to bring to Claude, not answer alone.</p>
+  </header>
+
+  <nav class="lesson-strip" id="lessonStrip">
+    <button class="ltab active" data-lesson="1">01 · The DOM</button>
+    <button class="ltab locked" data-lesson="2">02 · Arrays &amp; Objects</button>
+    <button class="ltab locked" data-lesson="3">03 · Async &amp; Fetch</button>
+    <button class="ltab locked" data-lesson="4">04 · The Worker</button>
+    <button class="ltab locked" data-lesson="5">05 · KV Storage</button>
+    <button class="ltab locked" data-lesson="6">06 · Full Loop</button>
+  </nav>
+
+  <!-- ===================== LESSON 1 ===================== -->
+  <div class="lesson active" data-lesson="1">
+    <span class="lesson-tag">Lesson 01 &middot; maps to Phase 1&ndash;3</span>
+    <h2>The DOM: Selecting and Changing Things</h2>
+    <p class="lesson-sub">Every tool you've built, the tab bars, checklists, search boxes, modals, all come down to the same handful of moves. This lesson names those moves, then shows you exactly where they live in your own knowledge base tool.</p>
+
+    <section class="block">
+      <div class="block-label">Fundamentals</div>
+
+      <h3>What the DOM actually is</h3>
+      <p>When a browser loads your HTML, it doesn't just display the text, it builds a live structure in memory called the DOM (Document Object Model). Every tag becomes an object your JavaScript can reach into, read, and change. HTML is the blueprint; the DOM is the actual building, and JavaScript is what walks around inside it flipping switches.</p>
+
+      <h3>Selecting an element</h3>
+      <p>Before you can change anything, you have to grab it. Two ways show up constantly in your code:</p>
+      <p><code class="inline">document.getElementById('search')</code> grabs the one element with that exact id. Fast, and works because every id on a page is meant to be unique.</p>
+      <p><code class="inline">document.querySelectorAll('.tab')</code> grabs every element with that class, as a list. Use this when you want to do the same thing to several elements at once.</p>
+
+      <h3>Changing what's there</h3>
+      <p>Once you have an element, the property you touch most is <code class="inline">classList</code>. It doesn't change what an element says, it changes which CSS rules apply to it. <code class="inline">classList.add()</code>, <code class="inline">.remove()</code>, and <code class="inline">.toggle()</code> are how almost every visual state change in your tools happens: active tabs, checked boxes, open panels. The JavaScript never decides what "active" looks like, it just decides whether the class is present. The look lives entirely in your CSS.</p>
+
+      <h3>Doing it for a whole list at once</h3>
+      <p><code class="inline">.forEach()</code> walks through a list and runs the same function on every item. You'll see this pattern constantly: a short array of names or ids, followed by a forEach that does one repeatable action per item. It's the difference between writing six near-identical lines and writing one line that scales to any number of items.</p>
+
+      <h3>Responding to a click</h3>
+      <p>Two patterns show up in your code for this, and it's worth knowing both: <code class="inline">onclick="functionName()"</code> written directly in the HTML, and <code class="inline">element.addEventListener('click', function(){...})</code> attached in JavaScript. Both work. The inline version is quicker to write and read for small tools like yours; addEventListener is the more scalable pattern for anything that gets complex or needs multiple listeners on the same element.</p>
+    </section>
+
+    <section class="block">
+      <div class="block-label">Applications &mdash; from durham_knowledge_base.html</div>
+
+      <div class="app-card">
+        <h4>Tab switching</h4>
+        <span class="app-source">function switchTab()</span>
+        <pre class="code">var PANELS = ['authority','scenarios','checklists','procedures','rooms','contacts'];
+
+function switchTab(id, btn) {
+  PANELS.forEach(function(p) {
+    document.getElementById('p-'+p).classList.toggle('active', p === id);
+  });
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+}</pre>
+        <dl class="breakdown">
+          <dt>PANELS.forEach(...)</dt>
+          <dd>Walks every panel name. For each one, checks whether it matches the tab that was clicked.</dd>
+          <dt>classList.toggle('active', p === id)</dt>
+          <dd>The second argument turns toggle from a flip into a direct set: true when this panel is the match, false otherwise. One line replaces what would be six if/else blocks.</dd>
+          <dt>querySelectorAll('.tab').forEach(...)</dt>
+          <dd>Same move, applied to the tab buttons themselves, so the highlight follows the click.</dd>
+        </dl>
+        <div class="why-box"><strong>Why it's built this way:</strong> Add a 7th panel later and you only add one string to <code class="inline">PANELS</code>. No new logic. Whenever you see a short array feeding a forEach, that's usually a sign the code was built to grow.</div>
+      </div>
+
+      <div class="app-card">
+        <h4>Checklist item toggle</h4>
+        <span class="app-source">function chk(el)</span>
+        <pre class="code">function chk(el) {
+  el.classList.toggle('done');
+}</pre>
+        <dl class="breakdown">
+          <dt>el.classList.toggle('done')</dt>
+          <dd>No second argument here, so this really does flip: adds "done" if it's missing, removes it if it's present.</dd>
+        </dl>
+        <div class="why-box"><strong>Why it's built this way:</strong> This is the smallest possible version of the pattern. One line, one job. Everything you see happen visually, the checkmark, the strikethrough, the faded text, is CSS reacting to the presence of <code class="inline">.done</code>. The function never touches appearance directly.</div>
+      </div>
+
+      <div class="app-card">
+        <h4>Accordion / scenario expand</h4>
+        <span class="app-source">function tog(header)</span>
+        <pre class="code">function tog(header) {
+  var body = header.nextElementSibling;
+  var chev = header.querySelector('.chev');
+  var isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chev) chev.classList.toggle('open', !isOpen);
+}</pre>
+        <dl class="breakdown">
+          <dt>header.nextElementSibling</dt>
+          <dd>Instead of an id lookup, this grabs whatever HTML element sits directly after the header in the page's structure. That's how it finds "the body that belongs to this specific header" without needing a matching id pair.</dd>
+          <dt>classList.contains('open')</dt>
+          <dd>Checks current state before deciding what to do next, rather than assuming.</dd>
+          <dt>isOpen ? 'none' : 'block'</dt>
+          <dd>A ternary: shorthand for a two-line if/else that picks one of two values.</dd>
+        </dl>
+        <div class="why-box"><strong>Why it's built this way:</strong> Using nextElementSibling instead of ids means you can duplicate a whole scenario block in the HTML and it just works, no id renaming required. It does mean the HTML order matters: the body has to come immediately after its header.</div>
+      </div>
+
+      <div class="app-card">
+        <h4>Clearing a form before it opens</h4>
+        <span class="app-source">function openConModal()</span>
+        <pre class="code">function openConModal() {
+  ['c-role','c-name','c-det','c-notes'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('con-modal-bg').classList.add('open');
+  document.getElementById('c-role').focus();
+}</pre>
+        <dl class="breakdown">
+          <dt>['c-role','c-name',...].forEach(...)</dt>
+          <dd>Same array-plus-forEach pattern as PANELS, this time used to blank out four input fields in one pass instead of four separate lines.</dd>
+          <dt>.focus()</dt>
+          <dd>Moves the cursor straight into the first field, so whoever opened the modal can start typing immediately.</dd>
+        </dl>
+        <div class="why-box"><strong>Why it's built this way:</strong> Same principle as the tab list: a short array of ids is easier to extend than a wall of repeated lines. Recognizing this shape once means you recognize it everywhere in your code from here on.</div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-label">Quiz &mdash; bring your answers to Claude</div>
+      <div class="quiz-intro"><strong>How to use this.</strong> Write your answer in each box below, it saves automatically on this device. Don't look anything up. When you're ready, open a chat and say "Lesson 1 quiz" and we'll go through them together. Getting one wrong is the point, it tells us what to slow down on.</div>
+
+      <div class="qitem">
+        <span class="qnum">Q1</span>
+        <p class="qtext">In <code class="inline">chk(el)</code>, why does one line handle both checking and unchecking an item, with no if/else at all?</p>
+        <textarea class="qanswer" id="q1-1" placeholder="Type your answer..."></textarea>
+        <span class="save-flag">Saved</span>
+      </div>
+
+      <div class="qitem">
+        <span class="qnum">Q2</span>
+        <p class="qtext"><code class="inline">tog()</code> finds its body using <code class="inline">nextElementSibling</code>. What would break if you inserted a new HTML element between a scenario's header and its body?</p>
+        <textarea class="qanswer" id="q1-2" placeholder="Type your answer..."></textarea>
+        <span class="save-flag">Saved</span>
+      </div>
+
+      <div class="qitem">
+        <span class="qnum">Q3</span>
+        <p class="qtext"><code class="inline">openConModal()</code> clears four fields with one forEach loop. Write out how you'd add a fifth field, <code class="inline">c-extra</code>, to that same clearing logic.</p>
+        <textarea class="qanswer" id="q1-3" placeholder="Type your answer..."></textarea>
+        <span class="save-flag">Saved</span>
+      </div>
+
+      <div class="qitem">
+        <span class="qnum">Q4</span>
+        <p class="qtext"><code class="inline">switchTab</code> and the modal-clearing loop both run forEach over a short array. What's the shared principle, and why does it matter for you specifically as the one who'll keep adding tabs and fields later?</p>
+        <textarea class="qanswer" id="q1-4" placeholder="Type your answer..."></textarea>
+        <span class="save-flag">Saved</span>
+      </div>
+
+      <div class="qitem">
+        <span class="qnum">Q5</span>
+        <p class="qtext">Predict: what happens if <code class="inline">chk()</code> is called on an element that does <em>not</em> yet have the class "done"? What happens if it's called again right after?</p>
+        <textarea class="qanswer" id="q1-5" placeholder="Type your answer..."></textarea>
+        <span class="save-flag">Saved</span>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== LOCKED LESSON PLACEHOLDER ===================== -->
+  <div class="lesson" data-lesson="locked">
+    <div class="locked-note">This lesson hasn't been written yet. Finish Lesson 1's quiz and bring it to chat, and we'll build the next one together.</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const tabs = Array.from(document.querySelectorAll('.ltab'));
+  const lessons = Array.from(document.querySelectorAll('.lesson'));
+  const lockedPane = document.querySelector('.lesson[data-lesson="locked"]');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const num = tab.dataset.lesson;
+      const target = document.querySelector('.lesson[data-lesson="'+num+'"]');
+      const isLocked = tab.classList.contains('locked');
+
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      lessons.forEach(l => l.classList.remove('active'));
+      if (isLocked || !target) {
+        lockedPane.classList.add('active');
+      } else {
+        target.classList.add('active');
+      }
+      window.scrollTo(0, 0);
+    });
+  });
+
+  // Autosave quiz answers (uses the browser's own local storage, since this
+  // page is meant to be hosted on your own site, not opened inside Claude)
+  const areas = Array.from(document.querySelectorAll('.qanswer'));
+  let saveTimers = {};
+
+  function loadAnswers(){
+    for (const area of areas){
+      try{
+        const saved = localStorage.getItem('quiz-'+area.id);
+        if (saved !== null) area.value = saved;
+      }catch(e){ /* nothing saved yet, or storage unavailable */ }
+    }
+  }
+
+  function flagSaved(area){
+    const flag = area.parentElement.querySelector('.save-flag');
+    flag.classList.add('show');
+    clearTimeout(area._flagTimer);
+    area._flagTimer = setTimeout(() => flag.classList.remove('show'), 1500);
+  }
+
+  areas.forEach(area => {
+    area.addEventListener('input', () => {
+      clearTimeout(saveTimers[area.id]);
+      saveTimers[area.id] = setTimeout(() => {
+        try{
+          localStorage.setItem('quiz-'+area.id, area.value);
+          flagSaved(area);
+        }catch(e){ console.error('Could not save answer', e); }
+      }, 600);
+    });
+  });
+
+  loadAnswers();
+})();
+</script>
+
+</body>
+</html>
